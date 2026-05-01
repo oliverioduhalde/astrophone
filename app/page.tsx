@@ -166,7 +166,7 @@ const CHORD_ASPECTS_FADE_OUT_MS = 10000
 const PLAYBACK_UI_INITIAL_HIDE_DELAY_MS = 1200
 const PLAYBACK_UI_AUTO_HIDE_DELAY_MS = 2200
 const TOP_PANEL_HINT_MS = 4000
-const BUILD_MARK = "V10"
+const BUILD_MARK = "V11"
 
 const NAV_MODE_HINT_LABEL_BY_LANGUAGE: Record<Language, Record<NavigationMode, string>> = {
   en: {
@@ -1096,7 +1096,7 @@ export default function AstrologyCalculator() {
   const [tuningCents, setTuningCents] = useState(0)
   const [modalEnabled, setModalEnabled] = useState(true)
   const [audioEngineMode, setAudioEngineMode] = useState<AudioEngineMode>("samples")
-  const [interfaceTheme, setInterfaceTheme] = useState<InterfaceTheme>("white")
+  const [interfaceTheme, setInterfaceTheme] = useState<InterfaceTheme>("neon_blue")
   const [language, setLanguage] = useState<Language>("en")
   const [synthVolume, setSynthVolume] = useState(450)
 
@@ -1467,6 +1467,11 @@ export default function AstrologyCalculator() {
   const chartAnalogGlowAnimation = themeMotionEnabled ? "theme-star-pulse-subtle 6.4s ease-in-out infinite" : undefined
   const chartAnalogGlowFilter =
     "drop-shadow(0 0 2.2px rgba(255,255,255,0.82)) drop-shadow(0 0 6.8px rgba(255,255,255,0.46)) drop-shadow(0 0 14px rgba(255,255,255,0.28))"
+  const chartGlyphCoreFilter = "drop-shadow(0 0 1.6px rgba(255,255,255,0.58))"
+  const chartGlyphHaloBaseFilter =
+    "url(#glyph-halo-only) drop-shadow(0 0 6.4px rgba(255,255,255,0.98)) drop-shadow(0 0 16px rgba(255,255,255,0.88))"
+  const chartGlyphHaloHoverFilter =
+    "url(#glyph-halo-only) drop-shadow(0 0 7.6px rgba(255,255,255,1)) drop-shadow(0 0 19.2px rgba(255,255,255,0.95))"
   const chartAddonGlowStyle = useMemo(
     () =>
       ({
@@ -4090,11 +4095,15 @@ export default function AstrologyCalculator() {
   const playbackUiShellClassName = `playback-ui-shell ${
     isPlaybackUiHidden ? "playback-ui-shell--hidden" : "playback-ui-shell--visible"
   }`
+  const earthCenterGlyphGlowTiming = getGlyphGlowTiming("earth-center")
+  const earthCenterGlyphGlowAnimation = `planet-glyph-glow ${earthCenterGlyphGlowTiming.durationSec}s ease-in-out ${earthCenterGlyphGlowTiming.delaySec}s infinite alternate`
+  const earthCenterThemePulseAnimation = themeMotionEnabled
+    ? `theme-star-pulse-subtle 5s ease-in-out infinite, subtle-star-glitch-30 ${earthCenterTwinkleTiming.durationSec}s steps(2, end) ${earthCenterTwinkleTiming.delaySec}s infinite`
+    : undefined
+  const earthCenterGlyphHaloFilter = isLoopRunning ? chartGlyphHaloHoverFilter : chartGlyphHaloBaseFilter
   const chartScreenPaddingClassName = showSubject
     ? "pb-3 md:pb-[94px]"
-    : isPlaybackUiHidden
-      ? "pb-0 md:pb-0"
-      : "pb-[126px] md:pb-[94px]"
+    : "pb-[126px] md:pb-[94px]"
 
   useEffect(() => {
     playbackUiVisibleRef.current = playbackUiVisible
@@ -4527,7 +4536,7 @@ export default function AstrologyCalculator() {
                   <button
                     onClick={retreatLoadingIntroParagraph}
                     disabled={isFirstIntroParagraph}
-                    className={`font-mono text-[14px] md:text-[24px] leading-none transition-colors px-2 py-1 ${
+                    className={`font-mono text-[21px] md:text-[36px] leading-none transition-colors px-2 py-1 ${
                       isFirstIntroParagraph
                         ? "text-white/30 cursor-not-allowed"
                         : "text-white/50 hover:text-white"
@@ -4537,7 +4546,7 @@ export default function AstrologyCalculator() {
                   </button>
                   <button
                     onClick={advanceLoadingIntroParagraph}
-                    className="play-idle-pulse font-mono text-[14px] md:text-[24px] leading-none text-white/50 hover:text-white transition-colors px-2 py-1"
+                    className="play-idle-pulse font-mono text-[21px] md:text-[36px] leading-none text-white/50 hover:text-white transition-colors px-2 py-1"
                   >
                     {isLastIntroParagraph ? ">" : ">"}
                   </button>
@@ -4647,6 +4656,15 @@ export default function AstrologyCalculator() {
       data-phosphor-theme={themeMotionDataAttr}
     >
       {themeMotionOverlays}
+      {isPreparingPlaybackAudio && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed left-1/2 top-1/2 z-[80] w-[min(70vw,420px)] -translate-x-1/2 -translate-y-1/2"
+          style={contentToneStyle}
+        >
+          <div className="playback-preparing-line" />
+        </div>
+      )}
       <div
         className={`relative z-10 mx-auto max-w-[1400px] astro-phosphor-content ${chartScreenPaddingClassName}`}
         style={contentToneStyle}
@@ -5391,13 +5409,6 @@ export default function AstrologyCalculator() {
           >
             ASTRO.LOG.IO
           </h1>
-          {isPreparingPlaybackAudio && (
-            <div
-              className={`${playbackUiShellClassName} font-mono text-[7px] md:text-[11px] uppercase tracking-[0.22em] text-white/55 text-center`}
-            >
-              {language === "es" ? "Preparando audio..." : "Preparing audio..."}
-            </div>
-          )}
           {horoscopeData && !showSubject && (
             <div className={`${playbackUiShellClassName} fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+96px)] z-30 shrink-0 md:absolute md:right-0 md:bottom-0 md:z-auto`}>
               <div
@@ -5826,12 +5837,7 @@ export default function AstrologyCalculator() {
                       const themeGlyphPulseAnimation = themeMotionEnabled
                         ? `theme-star-pulse-subtle 5s ease-in-out infinite, subtle-star-glitch-30 ${glyphTwinkleTiming.durationSec}s steps(2, end) ${glyphTwinkleTiming.delaySec}s infinite`
                         : undefined
-                      const glyphCoreFilter = "drop-shadow(0 0 1.6px rgba(255,255,255,0.58))"
-                      const glyphHaloBaseFilter =
-                        "url(#glyph-halo-only) drop-shadow(0 0 6.4px rgba(255,255,255,0.98)) drop-shadow(0 0 16px rgba(255,255,255,0.88))"
-                      const glyphHaloHoverFilter =
-                        "url(#glyph-halo-only) drop-shadow(0 0 7.6px rgba(255,255,255,1)) drop-shadow(0 0 19.2px rgba(255,255,255,0.95))"
-                      const glyphHaloFilter = isHovered ? glyphHaloHoverFilter : glyphHaloBaseFilter
+                      const glyphHaloFilter = isHovered ? chartGlyphHaloHoverFilter : chartGlyphHaloBaseFilter
 
                       return (
                         <g
@@ -5895,7 +5901,7 @@ export default function AstrologyCalculator() {
                                 preserveAspectRatio="xMidYMid meet"
                                 style={{
                                   pointerEvents: "none",
-                                  filter: glyphCoreFilter,
+                                  filter: chartGlyphCoreFilter,
                                   transformBox: "fill-box",
                                   transformOrigin: "center",
                                   transform: `scale(${interactionScale})`,
@@ -5941,7 +5947,7 @@ export default function AstrologyCalculator() {
                                   transformOrigin: `${position.x}px ${position.y}px`,
                                   opacity: isInteractionActive ? 1 : 0.92,
                                   transition: glyphTransition,
-                                  filter: glyphCoreFilter,
+                                  filter: chartGlyphCoreFilter,
                                 }}
                               >
                                 {glyphFallback}
@@ -6063,11 +6069,7 @@ export default function AstrologyCalculator() {
                         {/* Earth center control (single mode trigger) */}
                         <g
                           style={{
-                            animation: themeMotionEnabled
-                              ? `theme-star-pulse-subtle 5s ease-in-out infinite, subtle-star-glitch-soft ${earthCenterTwinkleTiming.durationSec}s steps(2, end) ${earthCenterTwinkleTiming.delaySec}s infinite`
-                              : undefined,
-                            filter: chartAnalogGlowFilter,
-                            mixBlendMode: "screen",
+                            animation: earthCenterThemePulseAnimation,
                             transformOrigin: `${EARTH_CENTER_X}px ${EARTH_CENTER_Y}px`,
                           }}
                         >
@@ -6080,36 +6082,72 @@ export default function AstrologyCalculator() {
                             onPointerDown={handleEarthCenterPress}
                             style={{ cursor: "pointer" }}
                           />
-                          <circle
-                            cx={EARTH_CENTER_X}
-                            cy={EARTH_CENTER_Y}
-                            r={EARTH_RADIUS}
-                            fill="none"
-                            stroke="white"
-                            strokeWidth="1.5"
-                            opacity={isLoopRunning ? 1 : 0.72}
-                            style={{ pointerEvents: "none" }}
-                          />
-                          <line
-                            x1={EARTH_CENTER_X}
-                            y1={EARTH_CENTER_Y - EARTH_RADIUS}
-                            x2={EARTH_CENTER_X}
-                            y2={EARTH_CENTER_Y + EARTH_RADIUS}
-                            stroke="white"
-                            strokeWidth="1.2"
-                            opacity={isLoopRunning ? 1 : 0.72}
-                            style={{ pointerEvents: "none" }}
-                          />
-                          <line
-                            x1={EARTH_CENTER_X - EARTH_RADIUS}
-                            y1={EARTH_CENTER_Y}
-                            x2={EARTH_CENTER_X + EARTH_RADIUS}
-                            y2={EARTH_CENTER_Y}
-                            stroke="white"
-                            strokeWidth="1.2"
-                            opacity={isLoopRunning ? 1 : 0.72}
-                            style={{ pointerEvents: "none" }}
-                          />
+                          <g
+                            style={{
+                              pointerEvents: "none",
+                              filter: earthCenterGlyphHaloFilter,
+                              animation: earthCenterGlyphGlowAnimation,
+                              mixBlendMode: "screen",
+                              opacity: isLoopRunning ? 0.94 : 0.86,
+                            }}
+                          >
+                            <circle
+                              cx={EARTH_CENTER_X}
+                              cy={EARTH_CENTER_Y}
+                              r={EARTH_RADIUS}
+                              fill="none"
+                              stroke="white"
+                              strokeWidth="1.5"
+                            />
+                            <line
+                              x1={EARTH_CENTER_X}
+                              y1={EARTH_CENTER_Y - EARTH_RADIUS}
+                              x2={EARTH_CENTER_X}
+                              y2={EARTH_CENTER_Y + EARTH_RADIUS}
+                              stroke="white"
+                              strokeWidth="1.2"
+                            />
+                            <line
+                              x1={EARTH_CENTER_X - EARTH_RADIUS}
+                              y1={EARTH_CENTER_Y}
+                              x2={EARTH_CENTER_X + EARTH_RADIUS}
+                              y2={EARTH_CENTER_Y}
+                              stroke="white"
+                              strokeWidth="1.2"
+                            />
+                          </g>
+                          <g
+                            style={{
+                              pointerEvents: "none",
+                              filter: chartGlyphCoreFilter,
+                              opacity: isLoopRunning ? 1 : 0.92,
+                            }}
+                          >
+                            <circle
+                              cx={EARTH_CENTER_X}
+                              cy={EARTH_CENTER_Y}
+                              r={EARTH_RADIUS}
+                              fill="none"
+                              stroke="white"
+                              strokeWidth="1.5"
+                            />
+                            <line
+                              x1={EARTH_CENTER_X}
+                              y1={EARTH_CENTER_Y - EARTH_RADIUS}
+                              x2={EARTH_CENTER_X}
+                              y2={EARTH_CENTER_Y + EARTH_RADIUS}
+                              stroke="white"
+                              strokeWidth="1.2"
+                            />
+                            <line
+                              x1={EARTH_CENTER_X - EARTH_RADIUS}
+                              y1={EARTH_CENTER_Y}
+                              x2={EARTH_CENTER_X + EARTH_RADIUS}
+                              y2={EARTH_CENTER_Y}
+                              stroke="white"
+                              strokeWidth="1.2"
+                            />
+                          </g>
                         </g>
 
                         <g data-export-pointer="true" style={chartAddonPassiveGlowStyle}>
