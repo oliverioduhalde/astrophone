@@ -348,6 +348,75 @@ function getReverbDecaySeconds(isChordMode: boolean): number {
   return isChordMode ? 5 : 3
 }
 
+/**
+ * Anti-click stop. Ramps `gainNode` to 0 over fadeMs, schedules source.stop()
+ * after the ramp finishes, and disconnects nodes. Safe to call when source
+ * is already stopped or nodes are already disconnected.
+ *
+ * Why: AudioBufferSourceNode.stop() is sample-accurate but produces an audible
+ * click when the signal level is non-zero at the cut point. A short gain
+ * ramp eliminates the discontinuity.
+ */
+function rampGainToZeroAndStop(
+  source: AudioBufferSourceNode | null | undefined,
+  gainNode: GainNode | null | undefined,
+  ctx: AudioContext | BaseAudioContext | null | undefined,
+  fadeMs = 30,
+  extraDisconnects: (AudioNode | null | undefined)[] = [],
+): void {
+  if (!ctx) return
+  const safeFadeSec = Math.max(0.005, fadeMs / 1000)
+  const now = ctx.currentTime
+  if (gainNode) {
+    try {
+      gainNode.gain.cancelScheduledValues(now)
+      gainNode.gain.setValueAtTime(gainNode.gain.value, now)
+      gainNode.gain.linearRampToValueAtTime(0, now + safeFadeSec)
+    } catch {
+      // gain already torn down — ignore
+    }
+  }
+  const stopAt = now + safeFadeSec
+  if (source) {
+    try {
+      // Disable onended so callers using it for state cleanup don't fire twice
+      ;(source as AudioBufferSourceNode).onended = null
+    } catch {
+      // ignore
+    }
+    try {
+      source.stop(stopAt)
+    } catch {
+      // already stopped
+    }
+  }
+  // Disconnect nodes after the ramp window so the tail plays cleanly
+  setTimeout(() => {
+    if (source) {
+      try {
+        source.disconnect()
+      } catch {
+        // ignore
+      }
+    }
+    if (gainNode) {
+      try {
+        gainNode.disconnect()
+      } catch {
+        // ignore
+      }
+    }
+    for (const node of extraDisconnects) {
+      if (!node) continue
+      try {
+        node.disconnect()
+      } catch {
+        // ignore
+      }
+    }
+  }, fadeMs + 10)
+}
+
 function createLowDiffusionReverbImpulse(ctx: BaseAudioContext, durationSeconds = 3): AudioBuffer {
   const sampleRate = ctx.sampleRate
   const length = Math.max(1, Math.floor(sampleRate * durationSeconds))
@@ -1337,30 +1406,14 @@ export function usePlanetAudio(
   )
 
   const stopOfflinePlayback = useCallback(() => {
-    if (activeOfflinePlaybackSourceRef.current) {
-      try {
-        activeOfflinePlaybackSourceRef.current.onended = null
-        activeOfflinePlaybackSourceRef.current.stop()
-      } catch (error) {
-        // ignore repeated stop
-      }
-      try {
-        activeOfflinePlaybackSourceRef.current.disconnect()
-      } catch (error) {
-        // ignore disconnect errors
-      }
-      activeOfflinePlaybackSourceRef.current = null
+    const source = activeOfflinePlaybackSourceRef.current
+    const gain = activeOfflinePlaybackGainRef.current
+    const ctx = audioContextRef.current
+    if (source || gain) {
+      rampGainToZeroAndStop(source ?? null, gain ?? null, ctx ?? null, 40)
     }
-
-    if (activeOfflinePlaybackGainRef.current) {
-      try {
-        activeOfflinePlaybackGainRef.current.disconnect()
-      } catch (error) {
-        // ignore disconnect errors
-      }
-      activeOfflinePlaybackGainRef.current = null
-    }
-
+    activeOfflinePlaybackSourceRef.current = null
+    activeOfflinePlaybackGainRef.current = null
     activeOfflinePlaybackStartedAtRef.current = 0
     activeOfflinePlaybackOffsetSecRef.current = 0
     activeOfflinePlaybackDurationSecRef.current = 0
@@ -2282,6 +2335,7 @@ export function usePlanetAudio(
           endTime: safeEndTime,
           planetName,
           basePlaybackRate,
+          gainNode,
           kind: "planet",
           panner,
         })
@@ -2391,6 +2445,7 @@ export function usePlanetAudio(
               endTime: aspectEndTime,
               planetName: `${planetName}-aspect`,
               basePlaybackRate,
+              gainNode: aspectGainNode,
               kind: "aspect",
               panner: aspectPanner,
             })
@@ -2408,16 +2463,23 @@ export function usePlanetAudio(
 
   const stopAll = useCallback(() => {
     stopOfflinePlayback()
+    const ctx = audioContextRef.current
     activeTracksRef.current.forEach((track) => {
-      try {
-        track.source.stop()
-      } catch (e) {
-        // Already stopped
+      if (track.gainNode && ctx) {
+        rampGainToZeroAndStop(track.source, track.gainNode, ctx, 30)
+      } else {
+        // No gain node available — fall back to immediate stop
+        try {
+          track.source.stop()
+        } catch {
+          // already stopped
+        }
       }
     })
     activeTracksRef.current.clear()
     playingPlanetsRef.current.clear()
     if (fmPadSynthRef.current && typeof fmPadSynthRef.current.releaseAll === "function") {
+      // Tone synths already have a release envelope from their ADSR config
       fmPadSynthRef.current.releaseAll()
     }
     if (bowlSynthRef.current && typeof bowlSynthRef.current.releaseAll === "function") {

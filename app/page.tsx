@@ -1415,6 +1415,7 @@ export default function AstrologyCalculator() {
     void prepareOrbitalStarBackground(sunSignIndex, { modalEnabled, force: true })
   }, [horoscopeData, modalEnabled, prepareOrbitalStarBackground])
   const lastPlayedPlanetRef = useRef<string | null>(null)
+  const lastPlanetTriggerAtMsByNameRef = useRef<Map<string, number>>(new Map())
   const totalLoadingIntroDurationMs = loadingIntroParagraphs.length * LOADING_SUBTITLE_STEP_MS
   const showLoadingIntroScreen =
     !loadingIntroSkipped && (loadingProgress < 100 || !loadingIntroCompleted || !loadingIntroExitReady)
@@ -2275,7 +2276,14 @@ export default function AstrologyCalculator() {
         const detectedPlanet = detectPlanetUnderPointer(state.adjustedAngle, ascDegrees)
 
         if (!mutePlanetAudio && detectedPlanet && detectedPlanet !== lastPlayedPlanetRef.current) {
-          triggerPlanetAudioAtPointer(detectedPlanet, state.adjustedAngle)
+          // Anti-click guard: don't re-trigger the same planet within 600 ms.
+          // Detection can flicker at angular boundaries (planet→null→planet)
+          // and rapid re-triggers create overlapping note onsets that audibly click.
+          const lastTriggeredAt = lastPlanetTriggerAtMsByNameRef.current.get(detectedPlanet) ?? 0
+          if (now - lastTriggeredAt >= 600) {
+            triggerPlanetAudioAtPointer(detectedPlanet, state.adjustedAngle)
+            lastPlanetTriggerAtMsByNameRef.current.set(detectedPlanet, now)
+          }
           lastPlayedPlanetRef.current = detectedPlanet
         } else if (!detectedPlanet) {
           lastPlayedPlanetRef.current = null
@@ -2345,6 +2353,7 @@ export default function AstrologyCalculator() {
   useEffect(() => {
     if (!isLoopRunning) {
       lastPlayedPlanetRef.current = null
+      lastPlanetTriggerAtMsByNameRef.current.clear()
       // When loop ends, stop background sound
       stopBackgroundSound()
       stopElementBackground()
