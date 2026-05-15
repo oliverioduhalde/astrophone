@@ -688,6 +688,60 @@
   z-index: 2;
 }
 
+/* CRT tooltip — same aesthetic, lighter scanlines for small popups */
+.crt-tooltip {
+  position: relative;
+  isolation: isolate;
+  background: rgba(0, 0, 0, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 0 12px rgba(255, 255, 255, 0.05);
+  color: var(--phosphor-text, rgba(255, 255, 255, 0.9));
+  text-shadow: 0 0 6px var(--phosphor-shadow, rgba(255, 255, 255, 0.4));
+}
+
+.crt-tooltip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--phosphor-scanline, rgba(255, 255, 255, 0.025)) 0,
+    var(--phosphor-scanline, rgba(255, 255, 255, 0.025)) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.crt-tooltip > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* CRT input — for form fields */
+.crt-input {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+  font-family: monospace;
+}
+
+.crt-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.22);
+}
+
+.crt-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
 /* CRT select */
 .crt-select {
   appearance: none;

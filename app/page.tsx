@@ -1418,7 +1418,7 @@ export default function AstrologyCalculator() {
     !loadingIntroSkipped && (loadingProgress < 100 || !loadingIntroCompleted || !loadingIntroExitReady)
 
   const languageToggle = (
-    <div className="fixed top-2 right-2 md:top-3 md:right-3 z-[100] flex items-center gap-1 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] select-none">
+    <div className="crt-tooltip fixed top-2 right-2 md:top-3 md:right-3 z-[100] flex items-center gap-1 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] select-none px-1 py-0.5">
       <button
         type="button"
         onClick={() => setLanguage("es")}
@@ -5457,7 +5457,7 @@ export default function AstrologyCalculator() {
                     type="datetime-local"
                     value={formData.datetime}
                     onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
-                    className="w-full bg-black/90 border border-white/50 p-1.5 text-[12px] text-white/90 md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none focus:shadow-[0_0_8px_rgba(255,255,255,0.2)] placeholder:text-white/30"
+                    className="w-full crt-input p-1.5 text-[12px] md:p-2 md:text-[20px]"
                   />
                 </div>
                 <div>
@@ -5479,7 +5479,7 @@ export default function AstrologyCalculator() {
                           void resolveLocationAndUpdateCoords(formData.location)
                         }
                       }}
-                      className="w-full bg-black/90 border border-white/50 p-1.5 text-[12px] text-white/90 md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none focus:shadow-[0_0_8px_rgba(255,255,255,0.2)] placeholder:text-white/30"
+                      className="w-full crt-input p-1.5 text-[12px] md:p-2 md:text-[20px]"
                       placeholder={ui.cityCountryPlaceholder}
                     />
                     {locationSuggestions.length > 0 && (
@@ -5518,7 +5518,7 @@ export default function AstrologyCalculator() {
                     step="0.0001"
                     value={formData.latitude}
                     onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                    className="w-full bg-black/90 border border-white/50 p-1.5 text-[12px] text-white/90 md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none focus:shadow-[0_0_8px_rgba(255,255,255,0.2)] placeholder:text-white/30"
+                    className="w-full crt-input p-1.5 text-[12px] md:p-2 md:text-[20px]"
                   />
                 </div>
                 <div>
@@ -5530,7 +5530,7 @@ export default function AstrologyCalculator() {
                     step="0.0001"
                     value={formData.longitude}
                     onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                    className="w-full bg-black/90 border border-white/50 p-1.5 text-[12px] text-white/90 md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none focus:shadow-[0_0_8px_rgba(255,255,255,0.2)] placeholder:text-white/30"
+                    className="w-full crt-input p-1.5 text-[12px] md:p-2 md:text-[20px]"
                   />
                 </div>
               </div>
@@ -5605,7 +5605,7 @@ export default function AstrologyCalculator() {
                         </svg>
                       </button>
                       <span
-                        className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[160px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap border border-white/75 bg-black/88 px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
+                        className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[160px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
                           tooltipText ? "opacity-100" : "opacity-0"
                         }`}
                       >
@@ -6537,7 +6537,7 @@ export default function AstrologyCalculator() {
             {/* Aspect Box: Rendered based on showAspectBox state */}
             {showAspectBox && (
               <div
-                className={`${playbackUiShellClassName} absolute bottom-4 left-4 bg-black/30 backdrop-blur-sm border border-white/20 rounded-lg p-2 max-w-xs`}
+                className={`${playbackUiShellClassName} crt-tooltip absolute bottom-4 left-4 p-2 max-w-xs`}
                 style={{ pointerEvents: "auto" }}
               >
                 {Object.entries(activePlanetAspectsMap).length > 0 &&
@@ -6658,7 +6658,7 @@ export default function AstrologyCalculator() {
                     </svg>
                   </button>
                   <span
-                    className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[126px] md:bottom-[106px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap border border-white/75 bg-black/88 px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
+                    className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[126px] md:bottom-[106px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
                       topPanelHoverKey === "menu" ? "opacity-100" : "opacity-0"
                     }`}
                   >
@@ -6773,7 +6773,7 @@ export default function AstrologyCalculator() {
                           </svg>
                         </button>
                         <span
-                          className={`pointer-events-none ${tooltipViewportClass} whitespace-normal md:whitespace-nowrap border border-white/75 bg-black/88 px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
+                          className={`pointer-events-none ${tooltipViewportClass} whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
                             tooltipText ? "opacity-100" : "opacity-0"
                           }`}
                         >
@@ -6816,7 +6816,7 @@ export default function AstrologyCalculator() {
                     </svg>
                   </button>
                   <span
-                    className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[126px] md:bottom-[106px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap border border-white/75 bg-black/88 px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
+                    className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[126px] md:bottom-[106px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
                       topPanelHoverKey === "photo:single" ? "opacity-100" : "opacity-0"
                     }`}
                   >
@@ -6891,7 +6891,7 @@ export default function AstrologyCalculator() {
       {showInfoOverlay && (
         <div className="fixed inset-0 z-50 bg-black/92">
           <div className="h-full flex items-center justify-center px-4 md:px-8">
-            <div className="relative w-full max-w-[1200px] min-h-[420px] md:min-h-[520px] px-3 py-4 md:px-5 md:py-5 flex flex-col">
+            <div className="crt-panel relative w-full max-w-[1200px] min-h-[420px] md:min-h-[520px] px-3 py-4 md:px-5 md:py-5 flex flex-col">
               <button
                 onClick={retreatInfoParagraph}
                 className="absolute -left-3 md:-left-5 top-1/2 -translate-y-1/2 font-mono text-[26px] md:text-[34px] leading-none text-white/50 hover:text-white transition-colors"
