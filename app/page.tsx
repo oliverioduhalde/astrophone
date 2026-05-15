@@ -3582,10 +3582,6 @@ export default function AstrologyCalculator() {
 
       context.clearRect(0, 0, canvas.width, canvas.height)
       context.save()
-      context.beginPath()
-      context.arc(exportCenter, exportCenter, exportRadius, 0, Math.PI * 2)
-      context.closePath()
-      context.clip()
 
       // Phosphor background gradient (vertical, matching CRT shell)
       const bgGradient = context.createLinearGradient(0, 0, 0, canvas.height)
@@ -4764,6 +4760,23 @@ export default function AstrologyCalculator() {
                       />
                       MC
                     </label>
+                  </div>
+
+                  <div className="border-t border-gray-600 my-1"></div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="font-mono text-[11px] uppercase tracking-[0.14em] w-24 flex-shrink-0">
+                      ASPECT SOUND
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={aspectsSoundVolume}
+                      onChange={(e) => setAspectsSoundVolume(Number(e.target.value))}
+                      className="menu-slider flex-1 h-[2px] bg-white rounded cursor-pointer appearance-none"
+                      aria-label="Aspect sound mix"
+                    />
                   </div>
 
                   <div className="border-t border-gray-600 my-1"></div>
