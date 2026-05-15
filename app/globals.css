@@ -651,6 +651,89 @@
   filter: brightness(1) hue-rotate(0deg);
 }
 
+/* CRT panel — applies phosphor aesthetic to menus, forms, and overlays */
+.crt-panel {
+  position: relative;
+  isolation: isolate;
+  background: rgba(0, 0, 0, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 18px rgba(255, 255, 255, 0.06),
+    inset 0 0 32px rgba(0, 0, 0, 0.6);
+  color: var(--phosphor-text, rgba(255, 255, 255, 0.88));
+  text-shadow: 0 0 8px var(--phosphor-shadow, rgba(255, 255, 255, 0.5));
+  font-family: var(--font-mono, monospace);
+}
+
+.crt-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--phosphor-scanline, rgba(255, 255, 255, 0.03)) 0,
+    var(--phosphor-scanline, rgba(255, 255, 255, 0.03)) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  mix-blend-mode: screen;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.crt-panel > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* CRT select */
+.crt-select {
+  appearance: none;
+  background: rgba(0, 0, 0, 0.9) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(255,255,255,0.7)'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.88);
+  font-family: monospace;
+  font-size: inherit;
+  padding-right: 24px;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+}
+
+.crt-select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+}
+
+.crt-select option {
+  background: #000;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+/* Loading ring around Earth glyph */
+@keyframes crt-loading-ring-spin {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -6.28; }
+}
+
+.crt-loading-ring-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 1.2;
+}
+
+.crt-loading-ring-progress {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.4;
+  stroke-linecap: butt;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
+  transition: stroke-dashoffset 0.4s linear;
+  transform-origin: center;
+}
+
 .menu-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 2px;

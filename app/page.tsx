@@ -4675,7 +4675,7 @@ export default function AstrologyCalculator() {
               ? createPortal(
                   <div
                     ref={menuPanelRef}
-                    className={`${playbackUiShellClassName} fixed z-[70] w-[min(92vw,540px)] md:w-[560px] bg-black border border-white px-5 py-5 text-white/88 max-h-[72vh] overflow-y-auto shadow-[0_0_0_1px_rgba(255,255,255,0.12)]`}
+                    className={`${playbackUiShellClassName} crt-panel fixed z-[70] w-[min(92vw,540px)] md:w-[560px] px-5 py-5 max-h-[72vh] overflow-y-auto`}
                     style={{
                       top: menuPanelPosition.top,
                       left: menuPanelPosition.left,
@@ -4776,7 +4776,7 @@ export default function AstrologyCalculator() {
                       <select
                         value={audioEngineMode}
                         onChange={(e) => setAudioEngineMode(e.target.value as AudioEngineMode)}
-                        className="w-full appearance-none bg-black border border-white text-white text-[13px] px-2 pr-7 py-1.5 font-mono uppercase tracking-[0.12em] focus:outline-none focus:border-white"
+                        className="w-full crt-select text-[13px] px-2 py-1.5 uppercase tracking-[0.12em]"
                       >
                         {engineOptions.map((option) => (
                           <option key={`minimal-engine-${option.value}`} value={option.value}>
@@ -5108,7 +5108,7 @@ export default function AstrologyCalculator() {
                         <select
                           value={audioEngineMode}
                           onChange={(e) => setAudioEngineMode(e.target.value as AudioEngineMode)}
-                          className="w-full appearance-none bg-black border border-white text-white text-[9px] px-1.5 pr-6 py-1 font-mono uppercase tracking-wide focus:outline-none focus:border-white"
+                          className="w-full crt-select text-[9px] px-1.5 py-1 uppercase tracking-wide"
                         >
                           {engineOptions.map((option) => (
                             <option key={`advanced-engine-${option.value}`} value={option.value}>
@@ -5469,7 +5469,7 @@ export default function AstrologyCalculator() {
         </div>
 
         {showSubject && (
-          <div className={`${playbackUiShellClassName} space-y-2 md:space-y-3`}>
+          <div className={`${playbackUiShellClassName} crt-panel space-y-2 md:space-y-3 px-3 py-3 md:px-5 md:py-4`}>
             <div className="mb-1.5 grid grid-cols-2 gap-1 md:mb-2 md:flex md:flex-wrap md:gap-1.5">
               <button
                 onClick={() => {
@@ -5505,7 +5505,7 @@ export default function AstrologyCalculator() {
                     type="datetime-local"
                     value={formData.datetime}
                     onChange={(e) => setFormData({ ...formData, datetime: e.target.value })}
-                    className="w-full bg-black border border-gray-500 p-1.5 text-[12px] text-white md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none"
+                    className="w-full bg-black/90 border border-white/50 p-1.5 text-[12px] text-white/90 md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none focus:shadow-[0_0_8px_rgba(255,255,255,0.2)] placeholder:text-white/30"
                   />
                 </div>
                 <div>
@@ -5527,7 +5527,7 @@ export default function AstrologyCalculator() {
                           void resolveLocationAndUpdateCoords(formData.location)
                         }
                       }}
-                      className="w-full bg-black border border-gray-500 p-1.5 text-[12px] text-white md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none"
+                      className="w-full bg-black/90 border border-white/50 p-1.5 text-[12px] text-white/90 md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none focus:shadow-[0_0_8px_rgba(255,255,255,0.2)] placeholder:text-white/30"
                       placeholder={ui.cityCountryPlaceholder}
                     />
                     {locationSuggestions.length > 0 && (
@@ -5566,7 +5566,7 @@ export default function AstrologyCalculator() {
                     step="0.0001"
                     value={formData.latitude}
                     onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                    className="w-full bg-black border border-gray-500 p-1.5 text-[12px] text-white md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none"
+                    className="w-full bg-black/90 border border-white/50 p-1.5 text-[12px] text-white/90 md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none focus:shadow-[0_0_8px_rgba(255,255,255,0.2)] placeholder:text-white/30"
                   />
                 </div>
                 <div>
@@ -5578,7 +5578,7 @@ export default function AstrologyCalculator() {
                     step="0.0001"
                     value={formData.longitude}
                     onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                    className="w-full bg-black border border-gray-500 p-1.5 text-[12px] text-white md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none"
+                    className="w-full bg-black/90 border border-white/50 p-1.5 text-[12px] text-white/90 md:p-2 md:text-[20px] font-mono focus:border-white focus:outline-none focus:shadow-[0_0_8px_rgba(255,255,255,0.2)] placeholder:text-white/30"
                   />
                 </div>
               </div>
@@ -6066,6 +6066,32 @@ export default function AstrologyCalculator() {
 
                     {showPointer && (
                       <>
+                        {/* Loading ring around Earth glyph */}
+                        {loadingProgress < 100 && (() => {
+                          const ringR = EARTH_RADIUS + 5
+                          const circ = 2 * Math.PI * ringR
+                          const dashOffset = circ * (1 - loadingProgress / 100)
+                          return (
+                            <g style={{ pointerEvents: "none" }}>
+                              <circle
+                                cx={EARTH_CENTER_X}
+                                cy={EARTH_CENTER_Y}
+                                r={ringR}
+                                className="crt-loading-ring-track"
+                              />
+                              <circle
+                                cx={EARTH_CENTER_X}
+                                cy={EARTH_CENTER_Y}
+                                r={ringR}
+                                className="crt-loading-ring-progress"
+                                strokeDasharray={circ}
+                                strokeDashoffset={dashOffset}
+                                style={{ transform: `rotate(-90deg)`, transformOrigin: `${EARTH_CENTER_X}px ${EARTH_CENTER_Y}px` }}
+                              />
+                            </g>
+                          )
+                        })()}
+
                         {/* Earth center control (single mode trigger) */}
                         <g
                           style={{
