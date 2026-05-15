@@ -1418,11 +1418,11 @@ export default function AstrologyCalculator() {
     !loadingIntroSkipped && (loadingProgress < 100 || !loadingIntroCompleted || !loadingIntroExitReady)
 
   const languageToggleInline = (
-    <div className="flex items-center gap-1 font-mono text-[9px] md:text-[10px] uppercase tracking-[0.2em] select-none leading-none">
+    <div className="flex items-center gap-0.5 font-mono text-[8px] md:text-[10px] uppercase tracking-[0.15em] select-none leading-none">
       <button
         type="button"
         onClick={() => setLanguage("es")}
-        className={`px-1 py-0.5 transition-colors ${
+        className={`px-0.5 py-0.5 transition-colors ${
           language === "es" ? "text-white" : "text-white/40 hover:text-white/80"
         }`}
         aria-label="Cambiar a español"
@@ -1433,7 +1433,7 @@ export default function AstrologyCalculator() {
       <button
         type="button"
         onClick={() => setLanguage("en")}
-        className={`px-1 py-0.5 transition-colors ${
+        className={`px-0.5 py-0.5 transition-colors ${
           language === "en" ? "text-white" : "text-white/40 hover:text-white/80"
         }`}
         aria-label="Switch to English"
@@ -2086,11 +2086,28 @@ export default function AstrologyCalculator() {
         return
       }
 
-      window.navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 120000,
-      })
+      const tryGet = (highAccuracy: boolean) =>
+        window.navigator.geolocation.getCurrentPosition(
+          resolve,
+          (err) => {
+            if (highAccuracy && (err.code === err.TIMEOUT || err.code === err.POSITION_UNAVAILABLE)) {
+              window.navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: false,
+                timeout: 15000,
+                maximumAge: 600000,
+              })
+            } else {
+              reject(err)
+            }
+          },
+          {
+            enableHighAccuracy: highAccuracy,
+            timeout: 10000,
+            maximumAge: 120000,
+          },
+        )
+
+      tryGet(true)
     })
   }, [])
 
@@ -4624,7 +4641,7 @@ export default function AstrologyCalculator() {
         style={contentToneStyle}
       >
         <div className={`${playbackUiShellClassName} relative mb-1 pb-1 border-b border-white flex items-end justify-center gap-3 min-h-[34px] md:min-h-[52px]`}>
-          <div className="absolute right-1 bottom-1 md:right-2 md:bottom-2">
+          <div className="absolute right-0 top-0">
             {languageToggleInline}
           </div>
           <div ref={menuPanelAnchorRef} className="absolute left-0 bottom-full mb-[5px]" aria-hidden="true">
