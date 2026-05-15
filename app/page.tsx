@@ -1211,7 +1211,7 @@ export default function AstrologyCalculator() {
             modeOff: "APAGADO",
             manual: "MANUAL",
             hereNow: "AQUI Y AHORA",
-            dateTimePlaceInput: "DATOS DE FECHA Y LUGAR",
+            dateTimePlaceInput: "INPUT DATE & PLACE",
             dataInput: "INGRESO DE DATOS",
             dateTime: "Fecha y Hora",
             location: "Ubicacion",
@@ -1298,7 +1298,7 @@ export default function AstrologyCalculator() {
             modeOff: "OFF",
             manual: "MANUAL",
             hereNow: "HERE & NOW",
-            dateTimePlaceInput: "DATE & PLACE DATA INPUT",
+            dateTimePlaceInput: "INPUT DATE & PLACE",
             dataInput: "DATA INPUT",
             dateTime: "Date & Time",
             location: "Location",
@@ -5430,7 +5430,7 @@ export default function AstrologyCalculator() {
 
         {showSubject && (
           <div className={`${playbackUiShellClassName} crt-panel space-y-2 md:space-y-3 px-3 py-3 md:px-5 md:py-4`}>
-            <div className="mb-1.5 grid grid-cols-2 gap-1 md:mb-2 md:flex md:flex-wrap md:gap-1.5">
+            <div className="mb-1.5 grid grid-cols-2 gap-1 md:mb-2 md:gap-1.5">
               <button
                 onClick={() => {
                   void applyHereAndNow()
