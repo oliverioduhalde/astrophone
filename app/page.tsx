@@ -1443,11 +1443,6 @@ export default function AstrologyCalculator() {
     </div>
   )
 
-  const languageToggleLoading = (
-    <div className="absolute top-2 right-2 md:top-3 md:right-3 z-10">
-      {languageToggleInline}
-    </div>
-  )
   const activeThemeVisual = THEME_MOTION_VISUALS[interfaceTheme]
   const themeMotionDataAttr = interfaceTheme
   const interfaceThemeFilter = useMemo(() => {
@@ -4530,13 +4525,15 @@ export default function AstrologyCalculator() {
         data-phosphor-theme={themeMotionDataAttr}
       >
         {themeMotionOverlays}
-        {languageToggleLoading}
         <div className="relative z-10 w-full max-w-3xl astro-phosphor-content" style={contentToneStyle}>
           <div className="mb-8 min-h-[420px]">
-            <div className="w-full text-center pt-1">
+            <div className="relative w-full text-center pt-1">
               <h1 className="font-mono text-xl md:text-4xl uppercase tracking-widest text-center">
                 ASTRO.LOG.IO
               </h1>
+              <div className="absolute right-0 top-1 md:top-2">
+                {languageToggleInline}
+              </div>
               <div className="mt-2 h-[3px] w-full bg-white/20">
                 <div
                   className="h-full bg-white"
