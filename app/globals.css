@@ -651,6 +651,82 @@
   filter: brightness(1) hue-rotate(0deg);
 }
 
+/* Per-theme UI color tokens — applied to menus/tooltips/buttons */
+[data-phosphor-theme="neon_blue"] {
+  --ui-color: rgba(160, 230, 255, 0.95);
+  --ui-color-soft: rgba(160, 230, 255, 0.65);
+  --ui-color-faint: rgba(160, 230, 255, 0.35);
+  --ui-color-border: rgba(143, 220, 255, 0.7);
+  --ui-color-glow: rgba(120, 220, 255, 0.45);
+}
+[data-phosphor-theme="phosphor_green"] {
+  --ui-color: rgba(170, 255, 195, 0.95);
+  --ui-color-soft: rgba(170, 255, 195, 0.65);
+  --ui-color-faint: rgba(170, 255, 195, 0.35);
+  --ui-color-border: rgba(150, 240, 175, 0.7);
+  --ui-color-glow: rgba(130, 255, 165, 0.45);
+}
+[data-phosphor-theme="amber_phosphor"] {
+  --ui-color: rgba(255, 200, 140, 0.95);
+  --ui-color-soft: rgba(255, 200, 140, 0.65);
+  --ui-color-faint: rgba(255, 200, 140, 0.35);
+  --ui-color-border: rgba(255, 190, 120, 0.7);
+  --ui-color-glow: rgba(255, 180, 100, 0.45);
+}
+[data-phosphor-theme="mystical_purpura"] {
+  --ui-color: rgba(220, 180, 255, 0.95);
+  --ui-color-soft: rgba(220, 180, 255, 0.65);
+  --ui-color-faint: rgba(220, 180, 255, 0.35);
+  --ui-color-border: rgba(210, 170, 255, 0.7);
+  --ui-color-glow: rgba(200, 150, 255, 0.45);
+}
+[data-phosphor-theme="inverted"] {
+  --ui-color: rgba(255, 255, 255, 0.95);
+  --ui-color-soft: rgba(255, 255, 255, 0.65);
+  --ui-color-faint: rgba(255, 255, 255, 0.35);
+  --ui-color-border: rgba(255, 255, 255, 0.7);
+  --ui-color-glow: rgba(255, 255, 255, 0.45);
+}
+/* default (white theme handled below by separate inverted rules) */
+:root {
+  --ui-color: rgba(255, 255, 255, 0.92);
+  --ui-color-soft: rgba(255, 255, 255, 0.65);
+  --ui-color-faint: rgba(255, 255, 255, 0.35);
+  --ui-color-border: rgba(255, 255, 255, 0.72);
+  --ui-color-glow: rgba(255, 255, 255, 0.4);
+}
+
+/* Themed panels: color text + borders + glow with the active theme tone */
+[data-phosphor-theme="neon_blue"] .crt-panel,
+[data-phosphor-theme="phosphor_green"] .crt-panel,
+[data-phosphor-theme="amber_phosphor"] .crt-panel,
+[data-phosphor-theme="mystical_purpura"] .crt-panel,
+[data-phosphor-theme="inverted"] .crt-panel,
+[data-phosphor-theme="neon_blue"] .crt-tooltip,
+[data-phosphor-theme="phosphor_green"] .crt-tooltip,
+[data-phosphor-theme="amber_phosphor"] .crt-tooltip,
+[data-phosphor-theme="mystical_purpura"] .crt-tooltip,
+[data-phosphor-theme="inverted"] .crt-tooltip {
+  border-color: var(--ui-color-border);
+  color: var(--ui-color);
+  text-shadow: 0 0 8px var(--ui-color-glow);
+}
+
+[data-phosphor-theme="neon_blue"] .crt-input,
+[data-phosphor-theme="phosphor_green"] .crt-input,
+[data-phosphor-theme="amber_phosphor"] .crt-input,
+[data-phosphor-theme="mystical_purpura"] .crt-input,
+[data-phosphor-theme="inverted"] .crt-input,
+[data-phosphor-theme="neon_blue"] .crt-select,
+[data-phosphor-theme="phosphor_green"] .crt-select,
+[data-phosphor-theme="amber_phosphor"] .crt-select,
+[data-phosphor-theme="mystical_purpura"] .crt-select,
+[data-phosphor-theme="inverted"] .crt-select {
+  border-color: var(--ui-color-border);
+  color: var(--ui-color);
+  text-shadow: 0 0 6px var(--ui-color-glow);
+}
+
 /* White theme: invert menus/tooltips so text is visible on the bright background */
 [data-phosphor-theme="white"] .crt-panel,
 [data-phosphor-theme="white"] .crt-tooltip {
@@ -827,6 +903,72 @@
 .crt-select option {
   background: #000;
   color: rgba(255, 255, 255, 0.88);
+}
+
+/* Concentric loading rings for here-and-now fetch */
+@keyframes crt-loader-rotate-cw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes crt-loader-rotate-ccw {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+@keyframes crt-loader-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+.crt-loader {
+  position: relative;
+  width: 88px;
+  height: 88px;
+}
+.crt-loader__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+  transform-origin: center;
+}
+.crt-loader__ring--outer {
+  inset: 0;
+  border-style: solid;
+  border-color: currentColor transparent currentColor transparent;
+  animation: crt-loader-rotate-cw 2.4s linear infinite;
+  opacity: 0.85;
+}
+.crt-loader__ring--mid {
+  inset: 14px;
+  border-style: dashed;
+  border-color: currentColor;
+  animation: crt-loader-rotate-ccw 3.2s linear infinite;
+  opacity: 0.6;
+}
+.crt-loader__ring--inner {
+  inset: 28px;
+  border-style: solid;
+  border-color: transparent currentColor transparent currentColor;
+  animation: crt-loader-rotate-cw 1.6s linear infinite;
+  opacity: 0.9;
+}
+.crt-loader__dot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.crt-loader__dot::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+.crt-loader__label {
+  animation: crt-loader-pulse 1.6s ease-in-out infinite;
 }
 
 /* Loading ring around Earth glyph */

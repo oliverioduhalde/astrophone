@@ -1010,6 +1010,8 @@ const calculatePointerState = (elapsed: number, duration: number, ascDegrees: nu
 export default function AstrologyCalculator() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [showSubject, setShowSubject] = useState(true)
+  const [isFetchingHereNow, setIsFetchingHereNow] = useState(false)
+  const hasAutoAppliedHereNowRef = useRef(false)
   const [showPlanets, setShowPlanets] = useState(false)
   const [showAspects, setShowAspects] = useState(false) // changed to false - dynaspects is the main one
   const [showAspectGraph, setShowAspectGraph] = useState(false)
@@ -1773,6 +1775,15 @@ export default function AstrologyCalculator() {
     if (typeof document === "undefined") return
     document.documentElement.setAttribute("data-phosphor-theme", interfaceTheme)
   }, [interfaceTheme])
+
+  useEffect(() => {
+    if (hasAutoAppliedHereNowRef.current) return
+    if (!showSubject) return
+    if (showLoadingIntroScreen) return
+    hasAutoAppliedHereNowRef.current = true
+    void applyHereAndNow()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showLoadingIntroScreen, showSubject])
 
   const updateMenuPanelPosition = useCallback(() => {
     if (typeof window === "undefined") return
@@ -4083,6 +4094,7 @@ export default function AstrologyCalculator() {
 
     setError("")
     setSelectedPreset("here_now")
+    setIsFetchingHereNow(true)
     setFormData({
       datetime: nowDateTime,
       location: "",
@@ -4145,6 +4157,8 @@ export default function AstrologyCalculator() {
             : "Geolocation is unavailable. Please enter location manually.",
       )
       return null
+    } finally {
+      setIsFetchingHereNow(false)
     }
   }
 
@@ -5434,6 +5448,19 @@ export default function AstrologyCalculator() {
 
         {showSubject && (
           <div className={`${playbackUiShellClassName} crt-panel space-y-2 md:space-y-3 px-3 py-3 md:px-5 md:py-4`}>
+            {isFetchingHereNow && (
+              <div className="flex flex-col items-center justify-center py-6 md:py-8 gap-3">
+                <div className="crt-loader text-white">
+                  <div className="crt-loader__ring crt-loader__ring--outer" />
+                  <div className="crt-loader__ring crt-loader__ring--mid" />
+                  <div className="crt-loader__ring crt-loader__ring--inner" />
+                  <div className="crt-loader__dot" />
+                </div>
+                <div className="crt-loader__label font-mono text-[10px] md:text-[14px] uppercase tracking-[0.25em] text-white/80">
+                  {language === "es" ? "ESPERANDO DATOS..." : "WAITING DATA INPUT..."}
+                </div>
+              </div>
+            )}
             <div className="mb-1.5 grid grid-cols-2 gap-1 md:mb-2 md:gap-1.5">
               <button
                 onClick={() => {
@@ -6910,10 +6937,10 @@ export default function AstrologyCalculator() {
       {showInfoOverlay && (
         <div className="fixed inset-0 z-50 bg-black/92">
           <div className="h-full flex items-center justify-center px-4 md:px-8">
-            <div className="crt-panel relative w-full max-w-[1200px] min-h-[420px] md:min-h-[520px] px-3 py-4 md:px-5 md:py-5 flex flex-col">
+            <div className="crt-panel relative w-full max-w-[1200px] min-h-[420px] md:min-h-[520px] px-10 py-4 md:px-14 md:py-5 flex flex-col">
               <button
                 onClick={retreatInfoParagraph}
-                className="absolute -left-3 md:-left-5 top-1/2 -translate-y-1/2 font-mono text-[26px] md:text-[34px] leading-none text-white/50 hover:text-white transition-colors"
+                className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 font-mono text-[26px] md:text-[34px] leading-none text-white/60 hover:text-white transition-colors z-10"
                 style={{ fontFamily: MONOTYPE_FONT_STACK }}
                 aria-label={language === "es" ? "Parrafo anterior" : "Previous info page"}
               >
@@ -6921,14 +6948,14 @@ export default function AstrologyCalculator() {
               </button>
               <button
                 onClick={advanceInfoParagraph}
-                className="absolute -right-3 md:-right-5 top-1/2 -translate-y-1/2 font-mono text-[26px] md:text-[34px] leading-none text-white/50 hover:text-white transition-colors"
+                className="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 font-mono text-[26px] md:text-[34px] leading-none text-white/60 hover:text-white transition-colors z-10"
                 style={{ fontFamily: MONOTYPE_FONT_STACK }}
                 aria-label={language === "es" ? "Parrafo siguiente" : "Next info page"}
               >
                 {">"}
               </button>
               <div
-                className="flex-1 font-mono text-[10px] md:text-[24px] leading-[1.58] text-white/88 whitespace-pre-line text-left"
+                className="flex-1 flex items-center justify-center font-mono text-[10px] md:text-[24px] leading-[1.58] text-white/88 whitespace-pre-line text-center"
               >
                 {renderInfoParagraph(language, infoParagraphs, infoParagraphIndex)}
               </div>
