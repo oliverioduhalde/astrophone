@@ -4663,22 +4663,7 @@ export default function AstrologyCalculator() {
                 </div>
 
                 <div className={advancedMenuEnabled ? "hidden" : "space-y-2"}>
-                  <div className="grid grid-cols-2 gap-1">
-                    <label className="flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.12em] cursor-pointer border border-white/60 px-2 py-1.5">
-                      <input
-                        type="checkbox"
-                        checked={showSubject}
-                        onChange={(e) => {
-                          const checked = e.target.checked
-                          setShowSubject(checked)
-                          if (checked) {
-                            setMenuOpen(false)
-                          }
-                        }}
-                        className="w-3 h-3 appearance-none border border-white checked:bg-white checked:border-white cursor-pointer"
-                      />
-                      {ui.dataInput}
-                    </label>
+                  <div className="grid grid-cols-3 gap-1">
                     <label className="flex items-center gap-1.5 font-mono text-[12px] uppercase tracking-[0.12em] cursor-pointer border border-white/60 px-2 py-1.5">
                       <input
                         type="checkbox"
@@ -4706,60 +4691,6 @@ export default function AstrologyCalculator() {
                       />
                       MC
                     </label>
-                  </div>
-
-                  <div className="border-t border-gray-600 my-1"></div>
-
-                  <div className="grid grid-cols-2 gap-1">
-                    {NAVIGATION_MODES.map((mode) => (
-                      <button
-                        key={`minimal-nav-${mode}`}
-                        title={navModeInstructionByMode[mode]}
-                        onClick={() => setNavigationModeFromMenu(mode)}
-                        className={`font-mono text-[12px] uppercase tracking-[0.14em] border px-2 py-1.5 transition-colors ${
-                          navigationMode === mode
-                            ? "bg-white text-black border-white"
-                            : "bg-transparent text-white border-gray-600 hover:border-white"
-                        }`}
-                      >
-                        {navModeHintLabel[mode]}
-                      </button>
-                    ))}
-                    <button
-                      onClick={resetToInitialState}
-                      className="font-mono text-[12px] uppercase tracking-[0.14em] border border-white px-2 py-1.5 hover:bg-white hover:text-black transition-colors"
-                    >
-                      {ui.reset}
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false)
-                      openInfoOverlay()
-                    }}
-                    className="mt-1 w-full font-mono text-[12px] uppercase tracking-[0.14em] border border-white px-2 py-1.5 hover:bg-white hover:text-black transition-colors"
-                  >
-                    {ui.info}
-                  </button>
-
-                  <div className="border-t border-gray-600 my-1"></div>
-
-                  <div className="flex items-center gap-1">
-                    <label className="font-mono text-[13px] uppercase tracking-[0.14em] w-20 flex-shrink-0">{ui.engine}</label>
-                    <div className="relative flex-1">
-                      <select
-                        value={audioEngineMode}
-                        onChange={(e) => setAudioEngineMode(e.target.value as AudioEngineMode)}
-                        className="w-full crt-select text-[13px] px-2 py-1.5 uppercase tracking-[0.12em]"
-                      >
-                        {engineOptions.map((option) => (
-                          <option key={`minimal-engine-${option.value}`} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-white/80 text-[11px]">▾</span>
-                    </div>
                   </div>
 
                   <div className="border-t border-gray-600 my-1"></div>
