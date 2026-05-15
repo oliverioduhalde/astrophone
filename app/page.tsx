@@ -3555,15 +3555,69 @@ export default function AstrologyCalculator() {
       }
       const exportCenter = SNAPSHOT_EXPORT_DIMENSION / 2
       const exportRadius = SNAPSHOT_EXPORT_DIMENSION / 2
+      const themeVisual = THEME_MOTION_VISUALS[interfaceTheme]
+      const shellVars = (themeVisual?.shellStyle ?? {}) as Record<string, string>
+      const phosphorBgTop = shellVars["--phosphor-bg-top"] || "#020202"
+      const phosphorBgMid = shellVars["--phosphor-bg-mid"] || "#0a0a0a"
+      const phosphorBgBottom = shellVars["--phosphor-bg-bottom"] || "#020202"
+      const phosphorAura = shellVars["--phosphor-aura"] || "rgba(255,255,255,0.1)"
+      const phosphorTopGlow = shellVars["--phosphor-top-glow"] || "rgba(255,255,255,0.06)"
+      const phosphorScanline = shellVars["--phosphor-scanline"] || "rgba(255,255,255,0.06)"
+
       context.clearRect(0, 0, canvas.width, canvas.height)
       context.save()
       context.beginPath()
       context.arc(exportCenter, exportCenter, exportRadius, 0, Math.PI * 2)
       context.closePath()
       context.clip()
-      context.fillStyle = "#000000"
+
+      // Phosphor background gradient (vertical, matching CRT shell)
+      const bgGradient = context.createLinearGradient(0, 0, 0, canvas.height)
+      bgGradient.addColorStop(0, phosphorBgTop)
+      bgGradient.addColorStop(0.52, phosphorBgMid)
+      bgGradient.addColorStop(1, phosphorBgBottom)
+      context.fillStyle = bgGradient
       context.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Centered aura/bloom
+      const auraGradient = context.createRadialGradient(
+        exportCenter, exportCenter, 0,
+        exportCenter, exportCenter, exportRadius * 0.85,
+      )
+      auraGradient.addColorStop(0, phosphorAura)
+      auraGradient.addColorStop(1, "rgba(0,0,0,0)")
+      context.fillStyle = auraGradient
+      context.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Top glow
+      const topGlowGradient = context.createRadialGradient(
+        exportCenter, 0, 0,
+        exportCenter, 0, exportRadius * 0.6,
+      )
+      topGlowGradient.addColorStop(0, phosphorTopGlow)
+      topGlowGradient.addColorStop(1, "rgba(0,0,0,0)")
+      context.fillStyle = topGlowGradient
+      context.fillRect(0, 0, canvas.width, canvas.height)
+
+      // Chart SVG (already has interface theme filter applied)
       context.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+      // CRT scanlines
+      context.fillStyle = phosphorScanline
+      for (let y = 0; y < canvas.height; y += 3) {
+        context.fillRect(0, y, canvas.width, 1)
+      }
+
+      // Vignette darkening at edges
+      const vignetteGradient = context.createRadialGradient(
+        exportCenter, exportCenter, exportRadius * 0.55,
+        exportCenter, exportCenter, exportRadius,
+      )
+      vignetteGradient.addColorStop(0, "rgba(0,0,0,0)")
+      vignetteGradient.addColorStop(1, "rgba(0,0,0,0.55)")
+      context.fillStyle = vignetteGradient
+      context.fillRect(0, 0, canvas.width, canvas.height)
+
       context.restore()
       URL.revokeObjectURL(svgUrl)
 
@@ -3589,7 +3643,7 @@ export default function AstrologyCalculator() {
     } finally {
       setIsExportingJpg(false)
     }
-  }, [buildSubjectSnapshotFileName, horoscopeData, interfaceThemeFilter, isExportingJpg, language, resolveSvgAssetToDataUrl])
+  }, [buildSubjectSnapshotFileName, horoscopeData, interfaceTheme, interfaceThemeFilter, isExportingJpg, language, resolveSvgAssetToDataUrl])
 
   const downloadNavigationModeMp3 = useCallback(
     async (mode: NavigationMode) => {
