@@ -1062,7 +1062,7 @@ export default function AstrologyCalculator() {
   const exportAssetDataUrlCacheRef = useRef<Map<string, string>>(new Map())
   const desktopMenuButtonRef = useRef<HTMLButtonElement | null>(null)
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null)
-  const [menuPanelPosition, setMenuPanelPosition] = useState<{ top: number; left: number } | null>(null)
+  const [menuPanelPosition, setMenuPanelPosition] = useState<{ bottom: number; left: number } | null>(null)
   const [crtFocusPoint, setCrtFocusPoint] = useState({ x: 50, y: 50 })
   const [isSidereal, setIsSidereal] = useState(false)
   const [selectedPreset, setSelectedPreset] = useState<SubjectPreset>("here_now")
@@ -1417,12 +1417,12 @@ export default function AstrologyCalculator() {
   const showLoadingIntroScreen =
     !loadingIntroSkipped && (loadingProgress < 100 || !loadingIntroCompleted || !loadingIntroExitReady)
 
-  const languageToggle = (
-    <div className="crt-tooltip fixed top-2 right-2 md:top-3 md:right-3 z-[100] flex items-center gap-1 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] select-none px-1 py-0.5">
+  const languageToggleInline = (
+    <div className="flex items-center gap-1 font-mono text-[9px] md:text-[10px] uppercase tracking-[0.2em] select-none leading-none">
       <button
         type="button"
         onClick={() => setLanguage("es")}
-        className={`px-1.5 py-0.5 transition-colors ${
+        className={`px-1 py-0.5 transition-colors ${
           language === "es" ? "text-white" : "text-white/40 hover:text-white/80"
         }`}
         aria-label="Cambiar a español"
@@ -1433,13 +1433,19 @@ export default function AstrologyCalculator() {
       <button
         type="button"
         onClick={() => setLanguage("en")}
-        className={`px-1.5 py-0.5 transition-colors ${
+        className={`px-1 py-0.5 transition-colors ${
           language === "en" ? "text-white" : "text-white/40 hover:text-white/80"
         }`}
         aria-label="Switch to English"
       >
         ENG
       </button>
+    </div>
+  )
+
+  const languageToggleLoading = (
+    <div className="absolute top-2 right-2 md:top-3 md:right-3 z-10">
+      {languageToggleInline}
     </div>
   )
   const activeThemeVisual = THEME_MOTION_VISUALS[interfaceTheme]
@@ -1784,7 +1790,7 @@ export default function AstrologyCalculator() {
     )
 
     setMenuPanelPosition({
-      top: Math.max(viewportPadding, anchorRect.top),
+      bottom: Math.max(viewportPadding, window.innerHeight - anchorRect.bottom),
       left,
     })
   }, [])
@@ -4524,7 +4530,7 @@ export default function AstrologyCalculator() {
         data-phosphor-theme={themeMotionDataAttr}
       >
         {themeMotionOverlays}
-        {languageToggle}
+        {languageToggleLoading}
         <div className="relative z-10 w-full max-w-3xl astro-phosphor-content" style={contentToneStyle}>
           <div className="mb-8 min-h-[420px]">
             <div className="w-full text-center pt-1">
@@ -4607,7 +4613,6 @@ export default function AstrologyCalculator() {
       data-phosphor-theme={themeMotionDataAttr}
     >
       {themeMotionOverlays}
-      {languageToggle}
       {isPreparingPlaybackAudio && (
         <div
           aria-hidden="true"
@@ -4622,14 +4627,17 @@ export default function AstrologyCalculator() {
         style={contentToneStyle}
       >
         <div className={`${playbackUiShellClassName} relative mb-1 pb-1 border-b border-white flex items-end justify-center gap-3 min-h-[34px] md:min-h-[52px]`}>
-          <div ref={menuPanelAnchorRef} className="absolute left-0 top-full mt-[5px]" aria-hidden="true">
+          <div className="absolute right-1 bottom-1 md:right-2 md:bottom-2">
+            {languageToggleInline}
+          </div>
+          <div ref={menuPanelAnchorRef} className="absolute left-0 bottom-full mb-[5px]" aria-hidden="true">
             {menuOpen && menuPanelPosition && typeof document !== "undefined"
               ? createPortal(
                   <div
                     ref={menuPanelRef}
                     className={`${playbackUiShellClassName} crt-panel fixed z-[70] w-[min(92vw,540px)] md:w-[560px] px-5 py-5 max-h-[72vh] overflow-y-auto`}
                     style={{
-                      top: menuPanelPosition.top,
+                      bottom: menuPanelPosition.bottom,
                       left: menuPanelPosition.left,
                     }}
                   >
