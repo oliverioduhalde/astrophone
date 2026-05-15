@@ -1416,6 +1416,32 @@ export default function AstrologyCalculator() {
   const totalLoadingIntroDurationMs = loadingIntroParagraphs.length * LOADING_SUBTITLE_STEP_MS
   const showLoadingIntroScreen =
     !loadingIntroSkipped && (loadingProgress < 100 || !loadingIntroCompleted || !loadingIntroExitReady)
+
+  const languageToggle = (
+    <div className="fixed top-2 right-2 md:top-3 md:right-3 z-[100] flex items-center gap-1 font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] select-none">
+      <button
+        type="button"
+        onClick={() => setLanguage("es")}
+        className={`px-1.5 py-0.5 transition-colors ${
+          language === "es" ? "text-white" : "text-white/40 hover:text-white/80"
+        }`}
+        aria-label="Cambiar a español"
+      >
+        SPA
+      </button>
+      <span className="text-white/30">/</span>
+      <button
+        type="button"
+        onClick={() => setLanguage("en")}
+        className={`px-1.5 py-0.5 transition-colors ${
+          language === "en" ? "text-white" : "text-white/40 hover:text-white/80"
+        }`}
+        aria-label="Switch to English"
+      >
+        ENG
+      </button>
+    </div>
+  )
   const activeThemeVisual = THEME_MOTION_VISUALS[interfaceTheme]
   const themeMotionDataAttr = interfaceTheme
   const interfaceThemeFilter = useMemo(() => {
@@ -4498,6 +4524,7 @@ export default function AstrologyCalculator() {
         data-phosphor-theme={themeMotionDataAttr}
       >
         {themeMotionOverlays}
+        {languageToggle}
         <div className="relative z-10 w-full max-w-3xl astro-phosphor-content" style={contentToneStyle}>
           <div className="mb-8 min-h-[420px]">
             <div className="w-full text-center pt-1">
@@ -4552,82 +4579,6 @@ export default function AstrologyCalculator() {
                   </button>
                 </div>
               </div>
-              <div className="absolute bottom-[190px] md:bottom-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3">
-                <div
-                  className={`pointer-events-none min-h-[14px] font-mono text-[8px] md:text-[11px] uppercase tracking-[0.35em] text-white transition-opacity ${
-                    loadingLanguageHint ? "opacity-100" : "opacity-0"
-                  }`}
-                  style={{
-                    opacity: loadingLanguageHint ? (loadingLanguageHintFading ? 0 : 1) : 0,
-                    transitionDuration: loadingLanguageHintFading ? "3000ms" : "180ms",
-                  }}
-                >
-                  {loadingLanguageHint === "en" ? "ENG" : loadingLanguageHint === "es" ? "SPA" : ""}
-                </div>
-                <div className="relative flex items-center justify-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLanguage("es")
-                      showLoadingLanguageHint("es")
-                    }}
-                    onMouseEnter={() => showLoadingLanguageHint("es")}
-                    onFocus={() => showLoadingLanguageHint("es")}
-                    className={`flex h-[18px] w-[36px] md:h-[34px] md:w-[68px] items-center justify-center overflow-hidden border p-0 transform-gpu transition-all duration-200 hover:scale-[1.16] ${
-                      language === "es"
-                        ? "border-white/80 opacity-80"
-                        : "border-white/40 opacity-30 hover:border-white hover:opacity-100"
-                    }`}
-                    aria-label={language === "es" ? "Cambiar a espanol" : "Switch to Spanish"}
-                  >
-                    <svg className="h-full w-full" viewBox="0 0 28 14" fill="none" aria-hidden="true" preserveAspectRatio="none">
-                      <rect width="28" height="14" fill="#FFFFFF" />
-                      <rect width="28" height="3.5" fill="#050505" />
-                      <rect y="10.5" width="28" height="3.5" fill="#050505" />
-                      <g transform="translate(11.15 4.65)">
-                        <path d="M1.35 0.15L1.7 0.65H1L1.35 0.15ZM0.85 0.7H1.85V1.05H0.85V0.7Z" fill="#050505" />
-                        <rect x="0.55" y="1.1" width="1.6" height="2.4" rx="0.18" fill="#050505" />
-                        <path d="M1.35 1.1V3.5" stroke="#FFFFFF" strokeWidth="0.24" />
-                        <path d="M0.68 2.02H2.02" stroke="#FFFFFF" strokeWidth="0.24" />
-                      </g>
-                      <rect x="0.4" y="0.4" width="27.2" height="13.2" stroke="#8A8A8A" strokeWidth="0.25" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLanguage("en")
-                      showLoadingLanguageHint("en")
-                    }}
-                    onMouseEnter={() => showLoadingLanguageHint("en")}
-                    onFocus={() => showLoadingLanguageHint("en")}
-                    className={`flex h-[18px] w-[36px] md:h-[34px] md:w-[68px] items-center justify-center overflow-hidden border p-0 transform-gpu transition-all duration-200 hover:scale-[1.16] ${
-                      language === "en"
-                        ? "border-white/80 opacity-80"
-                        : "border-white/40 opacity-30 hover:border-white hover:opacity-100"
-                    }`}
-                    aria-label={language === "es" ? "Cambiar a ingles" : "Switch to English"}
-                  >
-                    <svg className="h-full w-full" viewBox="0 0 60 30" fill="none" aria-hidden="true" preserveAspectRatio="none">
-                      <rect width="60" height="30" fill="#141414" />
-                      <path d="M0 0H6L60 24V30H54L0 6V0Z" fill="#F2F2F2" />
-                      <path d="M60 0H54L0 24V30H6L60 6V0Z" fill="#F2F2F2" />
-                      <path d="M0 0H3L60 27V30H57L0 3V0Z" fill="#8F8F8F" />
-                      <path d="M60 0V3L3 30H0V27L57 0H60Z" fill="#8F8F8F" />
-                      <rect x="24" width="12" height="30" fill="#F2F2F2" />
-                      <rect y="9" width="60" height="12" fill="#F2F2F2" />
-                      <rect x="26" width="8" height="30" fill="#8F8F8F" />
-                      <rect y="11" width="60" height="8" fill="#8F8F8F" />
-                      <rect x="0.6" y="0.6" width="58.8" height="28.8" stroke="#8A8A8A" strokeWidth="0.6" />
-                    </svg>
-                  </button>
-                  <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-black/72 text-white/88 shadow-[0_0_10px_rgba(255,255,255,0.2)] md:h-7 md:w-7">
-                    <svg width="8" height="8" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true" className="translate-x-[0.5px] md:h-[12px] md:w-[12px]">
-                      <path d="M2.2 1.4L8 5L2.2 8.6V1.4Z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
               <div className="absolute inset-x-0 bottom-[190px] flex items-center justify-between px-1 md:bottom-3 md:px-0">
                 <span className="font-mono text-[10px] md:text-[12px] uppercase tracking-[0.2em] text-white/55 px-2 py-1">
                   {BUILD_MARK}
@@ -4635,7 +4586,7 @@ export default function AstrologyCalculator() {
                 <button
                   type="button"
                   onClick={skipLoadingIntro}
-                  className="font-mono text-[15px] md:text-[18px] uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors px-2 py-1"
+                  className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-white/55 hover:text-white transition-colors px-2 py-1"
                 >
                   SKIP
                 </button>
@@ -4656,6 +4607,7 @@ export default function AstrologyCalculator() {
       data-phosphor-theme={themeMotionDataAttr}
     >
       {themeMotionOverlays}
+      {languageToggle}
       {isPreparingPlaybackAudio && (
         <div
           aria-hidden="true"
