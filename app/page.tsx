@@ -6678,8 +6678,8 @@ export default function AstrologyCalculator() {
       {horoscopeData && !showSubject && (
         <div className={`${playbackUiShellClassName} fixed bottom-0 inset-x-0 z-40 pointer-events-none`}>
           <div className="mx-auto w-full max-w-[calc(1400px+2rem)] md:max-w-[calc(1400px+4rem)] px-4 md:px-8">
-            <div className="pb-[calc(env(safe-area-inset-bottom)+8px)]">
-              <div className="relative mb-[6px] border-b border-white/90">
+            <div className="pb-[calc(env(safe-area-inset-bottom)+8px)] space-y-1 md:space-y-1.5">
+              <div className="relative !mb-[6px] !mt-0 border-b border-white/90">
                 <span
                   className={`absolute bottom-[-1px] h-[10px] w-px bg-white transition-opacity duration-200 ${
                     isPlaybackActive ? "opacity-100" : "opacity-0"
@@ -6723,7 +6723,7 @@ export default function AstrologyCalculator() {
                       >
                         <button
                           onClick={() => {
-                            showTopPanelHint(playHoverKey)
+                            showTopPanelHint(modeHoverKey)
                             if (isModePlaybackActive) {
                               stopCurrentPerformance()
                               return
@@ -6736,41 +6736,28 @@ export default function AstrologyCalculator() {
                               void launchModeFromSubject(mode)
                             }
                           }}
-                          onMouseEnter={() => showTopPanelHint(playHoverKey)}
-                          onFocus={() => showTopPanelHint(playHoverKey)}
-                          className={`flex h-full w-[24%] min-w-[24px] items-center justify-center border-r px-1 transition-colors ${
-                            isModePlaybackActive ? "border-black/25" : "border-white/30 hover:bg-white/12 hover:text-white"
+                          onMouseEnter={() => showTopPanelHint(modeHoverKey)}
+                          onFocus={() => showTopPanelHint(modeHoverKey)}
+                          className={`relative flex-1 px-1 font-mono font-bold text-[11px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[14px] ${
+                            isModePlaybackActive ? "text-black" : "hover:bg-white/12 hover:text-white"
                           }`}
                           title={playTooltipText}
                         >
-                          {isModePlaybackActive ? (
-                            <svg width="19" height="19" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                              <rect x="5" y="5" width="10" height="10" />
-                            </svg>
-                          ) : (
-                            <svg width="19" height="19" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                              <path d="M6 4 L16 10 L6 16 Z" />
-                            </svg>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => {
-                            showTopPanelHint(modeHoverKey)
-                            setNavigationMode(mode)
-                            if (horoscopeData) {
-                              startNavigationMode(mode)
-                            } else {
-                              setShowSubject(true)
-                              void launchModeFromSubject(mode)
-                            }
-                          }}
-                          onMouseEnter={() => showTopPanelHint(modeHoverKey)}
-                          onFocus={() => showTopPanelHint(modeHoverKey)}
-                          className={`flex-1 px-1 font-mono font-bold text-[11px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[14px] ${
-                            isModePlaybackActive ? "text-black" : "hover:bg-white/12 hover:text-white"
-                          }`}
-                        >
-                          {navModeHintLabel[mode]}
+                          <span
+                            className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-25"
+                            aria-hidden="true"
+                          >
+                            {isModePlaybackActive ? (
+                              <svg width="38" height="38" viewBox="0 0 20 20" fill="currentColor">
+                                <rect x="5" y="5" width="10" height="10" />
+                              </svg>
+                            ) : (
+                              <svg width="38" height="38" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M6 4 L16 10 L6 16 Z" />
+                              </svg>
+                            )}
+                          </span>
+                          <span className="relative">{navModeHintLabel[mode]}</span>
                         </button>
                         <button
                           onClick={() => handleDownloadButtonPress(mode)}
@@ -6846,6 +6833,38 @@ export default function AstrologyCalculator() {
                 </div>
                 <div className="relative">
                   <button
+                    onClick={openInfoOverlay}
+                    onMouseEnter={() => setTopPanelHoverKey("reset:info")}
+                    onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
+                    onFocus={() => setTopPanelHoverKey("reset:info")}
+                    onBlur={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
+                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[10px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:text-[13px] ${
+                      topPanelHoverKey === "reset:info"
+                        ? "border-white/80 bg-white/20 text-white"
+                        : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
+                    }`}
+                  >
+                    {ui.info}
+                  </button>
+                </div>
+                <div className="relative">
+                  <button
+                    onClick={resetToInitialState}
+                    onMouseEnter={() => setTopPanelHoverKey("reset:main")}
+                    onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
+                    onFocus={() => setTopPanelHoverKey("reset:main")}
+                    onBlur={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
+                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[10px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:text-[13px] ${
+                      topPanelHoverKey === "reset:main"
+                        ? "border-white/80 bg-white/20 text-white"
+                        : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
+                    }`}
+                  >
+                    {ui.reset}
+                  </button>
+                </div>
+                <div className="relative">
+                  <button
                     onClick={() => {
                       showTopPanelHint("photo:single")
                       void downloadChartSnapshotJpg()
@@ -6883,38 +6902,6 @@ export default function AstrologyCalculator() {
                   >
                     {photoTooltipText}
                   </span>
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={openInfoOverlay}
-                    onMouseEnter={() => setTopPanelHoverKey("reset:info")}
-                    onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
-                    onFocus={() => setTopPanelHoverKey("reset:info")}
-                    onBlur={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
-                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[10px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:text-[13px] ${
-                      topPanelHoverKey === "reset:info"
-                        ? "border-white/80 bg-white/20 text-white"
-                        : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
-                    }`}
-                  >
-                    {ui.info}
-                  </button>
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={resetToInitialState}
-                    onMouseEnter={() => setTopPanelHoverKey("reset:main")}
-                    onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
-                    onFocus={() => setTopPanelHoverKey("reset:main")}
-                    onBlur={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
-                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[10px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:text-[13px] ${
-                      topPanelHoverKey === "reset:main"
-                        ? "border-white/80 bg-white/20 text-white"
-                        : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
-                    }`}
-                  >
-                    {ui.reset}
-                  </button>
                 </div>
               </div>
 
