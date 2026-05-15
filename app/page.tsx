@@ -1212,7 +1212,7 @@ export default function AstrologyCalculator() {
             manual: "MANUAL",
             hereNow: "AQUI Y AHORA",
             dateTimePlaceInput: "INPUT DATE & PLACE",
-            dataInput: "INGRESO DE DATOS",
+            dataInput: "NUEVO INGRESO DE DATOS",
             dateTime: "Fecha y Hora",
             location: "Ubicacion",
             latitude: "Latitud",
@@ -1299,7 +1299,7 @@ export default function AstrologyCalculator() {
             manual: "MANUAL",
             hereNow: "HERE & NOW",
             dateTimePlaceInput: "INPUT DATE & PLACE",
-            dataInput: "DATA INPUT",
+            dataInput: "NEW DATA INPUT",
             dateTime: "Date & Time",
             location: "Location",
             latitude: "Latitude",
@@ -1768,6 +1768,11 @@ export default function AstrologyCalculator() {
     if (typeof window === "undefined") return
     window.localStorage.setItem("astro.log.io.language", language)
   }, [language])
+
+  useEffect(() => {
+    if (typeof document === "undefined") return
+    document.documentElement.setAttribute("data-phosphor-theme", interfaceTheme)
+  }, [interfaceTheme])
 
   const updateMenuPanelPosition = useCallback(() => {
     if (typeof window === "undefined") return
@@ -4602,7 +4607,7 @@ export default function AstrologyCalculator() {
               <h1 className="font-mono text-xl md:text-4xl uppercase tracking-widest text-center">
                 ASTRO.LOG.IO
               </h1>
-              <div className="absolute right-0 top-1 md:top-2">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2">
                 {languageToggleInline}
               </div>
               <div className="mt-2 h-[3px] w-full bg-white/20">
@@ -4695,7 +4700,7 @@ export default function AstrologyCalculator() {
         style={contentToneStyle}
       >
         <div className={`${playbackUiShellClassName} relative mb-1 pb-1 border-b border-white flex items-end justify-center gap-3 min-h-[34px] md:min-h-[52px]`}>
-          <div className="absolute right-0 top-0">
+          <div className="absolute right-0 top-1/2 -translate-y-1/2">
             {languageToggleInline}
           </div>
           <div ref={menuPanelAnchorRef} className="absolute left-0 bottom-full mb-[5px]" aria-hidden="true">
@@ -6643,7 +6648,7 @@ export default function AstrologyCalculator() {
                 />
               </div>
               {/* Row 1 — Modes (large, 3 cols) */}
-              <div className="grid grid-cols-3 gap-1 md:gap-1.5 pointer-events-auto mb-1 md:mb-1.5">
+              <div className="grid grid-cols-3 gap-1 md:gap-1.5 pointer-events-auto">
                 {TOP_PANEL_MODE_ORDER.map((mode) => {
                   const isActiveMode = navigationMode === mode
                   const isModePlaybackActive = isPlaybackActive && isActiveMode
@@ -6765,7 +6770,7 @@ export default function AstrologyCalculator() {
               </div>
 
               {/* Row 2 — Tools (small, 4 cols) */}
-              <div className="grid grid-cols-4 gap-1 md:gap-1.5 pointer-events-auto mb-1 md:mb-1.5">
+              <div className="grid grid-cols-4 gap-1 md:gap-1.5 pointer-events-auto">
                 <div className="relative">
                   <button
                     ref={(node) => {
@@ -6947,7 +6952,15 @@ export default function AstrologyCalculator() {
                   )
                 })}
               </div>
-              <div className="mt-5 flex justify-end">
+              <div className="mt-5 flex items-center justify-between gap-2">
+                <a
+                  href="https://astrologio.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[10px] md:text-[12px] uppercase tracking-wide text-white/70 hover:text-white underline underline-offset-2 transition-colors"
+                >
+                  astrologio.org
+                </a>
                 <button
                   onClick={closeInfoOverlay}
                   className="border border-white/70 px-2 py-1 font-mono text-[10px] md:text-[12px] uppercase tracking-wide text-white/85 hover:bg-white hover:text-black transition-colors"

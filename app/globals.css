@@ -651,6 +651,60 @@
   filter: brightness(1) hue-rotate(0deg);
 }
 
+/* White theme: invert menus/tooltips so text is visible on the bright background */
+[data-phosphor-theme="white"] .crt-panel,
+[data-phosphor-theme="white"] .crt-tooltip {
+  background: rgba(245, 245, 245, 0.97);
+  border-color: rgba(0, 0, 0, 0.72);
+  color: rgba(20, 20, 20, 0.92);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.08),
+    0 0 14px rgba(0, 0, 0, 0.06);
+}
+
+[data-phosphor-theme="white"] .crt-panel::before,
+[data-phosphor-theme="white"] .crt-tooltip::before {
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.05) 0,
+    rgba(0, 0, 0, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+
+[data-phosphor-theme="white"] .crt-input {
+  background: rgba(245, 245, 245, 0.96);
+  border-color: rgba(0, 0, 0, 0.5);
+  color: rgba(20, 20, 20, 0.92);
+  text-shadow: none;
+}
+
+[data-phosphor-theme="white"] .crt-input:focus {
+  border-color: rgba(0, 0, 0, 0.95);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.18);
+}
+
+[data-phosphor-theme="white"] .crt-input::placeholder {
+  color: rgba(20, 20, 20, 0.35);
+}
+
+[data-phosphor-theme="white"] .crt-select {
+  background: rgba(245, 245, 245, 0.96);
+  border-color: rgba(0, 0, 0, 0.55);
+  color: rgba(20, 20, 20, 0.92);
+  text-shadow: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(0,0,0,0.6)'/%3E%3C/svg%3E");
+}
+
+[data-phosphor-theme="white"] .crt-select option {
+  background: #f5f5f5;
+  color: rgba(20, 20, 20, 0.92);
+}
+
 /* CRT panel — applies phosphor aesthetic to menus, forms, and overlays */
 .crt-panel {
   position: relative;
