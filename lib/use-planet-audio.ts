@@ -349,6 +349,34 @@ function getReverbDecaySeconds(isChordMode: boolean): number {
 }
 
 /**
+ * Peak-normalize an AudioBuffer in-place so the loudest sample sits at
+ * targetDbfs (default -1 dBFS). Skips normalization if the buffer is
+ * already louder than the target or if the peak is essentially silence.
+ */
+function normalizeBufferPeak(buffer: AudioBuffer, targetDbfs = -1): AudioBuffer {
+  if (!buffer) return buffer
+  const targetLinear = Math.pow(10, targetDbfs / 20)
+  let peak = 0
+  for (let ch = 0; ch < buffer.numberOfChannels; ch += 1) {
+    const data = buffer.getChannelData(ch)
+    for (let i = 0; i < data.length; i += 1) {
+      const v = Math.abs(data[i])
+      if (v > peak) peak = v
+    }
+  }
+  if (peak < 1e-5) return buffer
+  const gain = targetLinear / peak
+  if (gain <= 1.0001) return buffer // already at or above target, leave it
+  for (let ch = 0; ch < buffer.numberOfChannels; ch += 1) {
+    const data = buffer.getChannelData(ch)
+    for (let i = 0; i < data.length; i += 1) {
+      data[i] = Math.max(-1, Math.min(1, data[i] * gain))
+    }
+  }
+  return buffer
+}
+
+/**
  * Anti-click stop. Ramps `gainNode` to 0 over fadeMs, schedules source.stop()
  * after the ramp finishes, and disconnects nodes. Safe to call when source
  * is already stopped or nodes are already disconnected.
@@ -1054,7 +1082,7 @@ export function usePlanetAudio(
           return null
         }
 
-        const renderedBuffer = await offlineContext.startRendering()
+        const renderedBuffer = normalizeBufferPeak(await offlineContext.startRendering(), -1)
         if (backgroundRenderRequestIdRef.current !== requestId) return null
 
         backgroundBufferRef.current = renderedBuffer
@@ -1677,7 +1705,7 @@ export function usePlanetAudio(
           }
         }
 
-        return await offlineContext.startRendering()
+        return normalizeBufferPeak(await offlineContext.startRendering(), -1)
       } catch (error) {
         console.error("[v0] Error rendering offline sample buffer:", error)
         return null
@@ -2714,7 +2742,7 @@ export function usePlanetAudio(
           }
         }
 
-        const renderedBuffer = await offlineContext.startRendering()
+        const renderedBuffer = normalizeBufferPeak(await offlineContext.startRendering(), -1)
         const leftChannel = renderedBuffer.getChannelData(0)
         const rightChannel = renderedBuffer.numberOfChannels > 1 ? renderedBuffer.getChannelData(1) : leftChannel
 

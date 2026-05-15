@@ -6687,8 +6687,8 @@ export default function AstrologyCalculator() {
       {horoscopeData && !showSubject && (
         <div className={`${playbackUiShellClassName} fixed bottom-0 inset-x-0 z-40 pointer-events-none`}>
           <div className="mx-auto w-full max-w-[calc(1400px+2rem)] md:max-w-[calc(1400px+4rem)] px-4 md:px-8">
-            <div className="pb-[calc(env(safe-area-inset-bottom)+8px)] space-y-1 md:space-y-1.5">
-              <div className="relative !mb-[6px] !mt-0 border-b border-white/90">
+            <div className="pb-[calc(env(safe-area-inset-bottom)+8px)] space-y-[2px] md:space-y-[3px]">
+              <div className="relative !mb-[4px] !mt-0 border-b border-white/90">
                 <span
                   className={`absolute bottom-[-1px] h-[10px] w-px bg-white transition-opacity duration-200 ${
                     isPlaybackActive ? "opacity-100" : "opacity-0"
@@ -6722,7 +6722,7 @@ export default function AstrologyCalculator() {
                   return (
                     <div key={`top-nav-${mode}`} className="relative">
                       <div
-                        className={`relative flex h-[52px] overflow-hidden border transition-colors md:h-[60px] ${
+                        className={`relative flex h-[40px] overflow-hidden border transition-colors md:h-[48px] ${
                           isModePlaybackActive
                             ? "border-white bg-white/80 text-black"
                             : isModeHovering
@@ -6747,7 +6747,7 @@ export default function AstrologyCalculator() {
                           }}
                           onMouseEnter={() => showTopPanelHint(modeHoverKey)}
                           onFocus={() => showTopPanelHint(modeHoverKey)}
-                          className={`relative flex-1 px-1 font-mono font-bold text-[11px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[14px] ${
+                          className={`relative flex-1 px-1 font-mono font-bold text-[8px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[10px] ${
                             isModePlaybackActive ? "text-black" : "hover:bg-white/12 hover:text-white"
                           }`}
                           title={playTooltipText}
@@ -6757,11 +6757,11 @@ export default function AstrologyCalculator() {
                             aria-hidden="true"
                           >
                             {isModePlaybackActive ? (
-                              <svg width="38" height="38" viewBox="0 0 20 20" fill="currentColor">
+                              <svg width="28" height="28" viewBox="0 0 20 20" fill="currentColor">
                                 <rect x="5" y="5" width="10" height="10" />
                               </svg>
                             ) : (
-                              <svg width="38" height="38" viewBox="0 0 20 20" fill="currentColor">
+                              <svg width="28" height="28" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M6 4 L16 10 L6 16 Z" />
                               </svg>
                             )}
@@ -6820,7 +6820,7 @@ export default function AstrologyCalculator() {
                     onClick={() => setMenuOpen((prev) => !prev)}
                     onMouseEnter={() => showTopPanelHint("menu")}
                     onFocus={() => showTopPanelHint("menu")}
-                    className={`flex h-[38px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[46px] ${
+                    className={`flex h-[40px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[48px] ${
                       menuOpen
                         ? "border-white/80 bg-white/20 text-white"
                         : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
@@ -6847,7 +6847,7 @@ export default function AstrologyCalculator() {
                     onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
                     onFocus={() => setTopPanelHoverKey("reset:info")}
                     onBlur={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
-                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[10px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:text-[13px] ${
+                    className={`h-[40px] w-full border px-1 py-0 font-mono text-[7px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[48px] md:text-[9px] ${
                       topPanelHoverKey === "reset:info"
                         ? "border-white/80 bg-white/20 text-white"
                         : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
@@ -6863,7 +6863,7 @@ export default function AstrologyCalculator() {
                     onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
                     onFocus={() => setTopPanelHoverKey("reset:main")}
                     onBlur={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
-                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[10px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:text-[13px] ${
+                    className={`h-[40px] w-full border px-1 py-0 font-mono text-[7px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[48px] md:text-[9px] ${
                       topPanelHoverKey === "reset:main"
                         ? "border-white/80 bg-white/20 text-white"
                         : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
@@ -6881,7 +6881,7 @@ export default function AstrologyCalculator() {
                     onMouseEnter={() => showTopPanelHint("photo:single")}
                     onFocus={() => showTopPanelHint("photo:single")}
                     disabled={!horoscopeData || isExportingJpg}
-                    className={`flex h-[38px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[46px] ${
+                    className={`flex h-[40px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[48px] ${
                       !horoscopeData || isExportingJpg
                         ? "border-white/20 bg-transparent text-white/20 cursor-not-allowed"
                         : topPanelHoverKey === "photo:single"
@@ -6923,7 +6923,7 @@ export default function AstrologyCalculator() {
                     setShowSubject(true)
                     setMenuOpen(false)
                   }}
-                  className="h-[44px] w-full border border-white/60 bg-transparent px-2 py-0 font-mono text-[13px] font-bold uppercase tracking-[0.18em] leading-none text-white transition-colors hover:border-white hover:bg-white/20 md:h-[52px] md:text-[16px]"
+                  className="h-[40px] w-full border border-white/60 bg-transparent px-2 py-0 font-mono text-[9px] font-bold uppercase tracking-[0.18em] leading-none text-white transition-colors hover:border-white hover:bg-white/20 md:h-[48px] md:text-[11px]"
                 >
                   {ui.dataInput}
                 </button>
