@@ -6715,10 +6715,12 @@ export default function AstrologyCalculator() {
                               stopCurrentPerformance()
                               return
                             }
+                            setNavigationMode(mode)
                             if (horoscopeData) {
                               startNavigationMode(mode)
                             } else {
-                              setNavigationMode(mode)
+                              setShowSubject(true)
+                              void launchModeFromSubject(mode)
                             }
                           }}
                           onMouseEnter={() => showTopPanelHint(playHoverKey)}
@@ -6741,10 +6743,12 @@ export default function AstrologyCalculator() {
                         <button
                           onClick={() => {
                             showTopPanelHint(modeHoverKey)
+                            setNavigationMode(mode)
                             if (horoscopeData) {
                               startNavigationMode(mode)
                             } else {
-                              setNavigationMode(mode)
+                              setShowSubject(true)
+                              void launchModeFromSubject(mode)
                             }
                           }}
                           onMouseEnter={() => showTopPanelHint(modeHoverKey)}
