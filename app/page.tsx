@@ -6657,36 +6657,8 @@ export default function AstrologyCalculator() {
                   style={{ left: `${Math.max(0, Math.min(100, playbackProgress * 100))}%` }}
                 />
               </div>
-              <div className="grid grid-cols-4 gap-0.5 items-stretch content-stretch md:grid-cols-8 md:gap-1.5 pointer-events-auto">
-                <div className="relative p-0 md:p-0.5 md:px-1 md:py-1">
-                  <button
-                    ref={(node) => {
-                      mobileMenuButtonRef.current = node
-                      desktopMenuButtonRef.current = node
-                    }}
-                    onClick={() => setMenuOpen((prev) => !prev)}
-                    onMouseEnter={() => showTopPanelHint("menu")}
-                    onFocus={() => showTopPanelHint("menu")}
-                    className={`flex h-[38px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[46px] ${
-                      menuOpen
-                        ? "border-white/80 bg-white/20 text-white"
-                        : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
-                    }`}
-                  >
-                    <svg width="19" height="19" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
-                      <path d="M2.5 5H13.5" />
-                      <path d="M2.5 8H13.5" />
-                      <path d="M2.5 11H13.5" />
-                    </svg>
-                  </button>
-                  <span
-                    className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[126px] md:bottom-[106px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
-                      topPanelHoverKey === "menu" ? "opacity-100" : "opacity-0"
-                    }`}
-                  >
-                    {TOP_PANEL_MENU_TOOLTIP_TEXT}
-                  </span>
-                </div>
+              {/* Row 1 — Modes (large, 3 cols) */}
+              <div className="grid grid-cols-3 gap-1 md:gap-1.5 pointer-events-auto mb-1 md:mb-1.5">
                 {TOP_PANEL_MODE_ORDER.map((mode) => {
                   const isActiveMode = navigationMode === mode
                   const isModePlaybackActive = isPlaybackActive && isActiveMode
@@ -6709,9 +6681,9 @@ export default function AstrologyCalculator() {
                         : null
 
                   return (
-                    <div key={`top-nav-${mode}`} className="relative p-0 md:p-0.5 md:px-1 md:py-1">
+                    <div key={`top-nav-${mode}`} className="relative">
                       <div
-                        className={`relative flex h-[38px] overflow-hidden border transition-colors md:h-[46px] ${
+                        className={`relative flex h-[52px] overflow-hidden border transition-colors md:h-[60px] ${
                           isModePlaybackActive
                             ? "border-white bg-white/80 text-black"
                             : isModeHovering
@@ -6760,7 +6732,7 @@ export default function AstrologyCalculator() {
                           }}
                           onMouseEnter={() => showTopPanelHint(modeHoverKey)}
                           onFocus={() => showTopPanelHint(modeHoverKey)}
-                          className={`flex-1 px-1 font-mono font-bold text-[5.3px] leading-none uppercase tracking-[0.09em] transition-colors md:text-[11.5px] ${
+                          className={`flex-1 px-1 font-mono font-bold text-[11px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[14px] ${
                             isModePlaybackActive ? "text-black" : "hover:bg-white/12 hover:text-white"
                           }`}
                         >
@@ -6805,7 +6777,40 @@ export default function AstrologyCalculator() {
                     </div>
                   )
                 })}
-                <div className="relative p-0 md:p-0.5 md:px-1 md:py-1">
+              </div>
+
+              {/* Row 2 — Tools (small, 4 cols) */}
+              <div className="grid grid-cols-4 gap-1 md:gap-1.5 pointer-events-auto mb-1 md:mb-1.5">
+                <div className="relative">
+                  <button
+                    ref={(node) => {
+                      mobileMenuButtonRef.current = node
+                      desktopMenuButtonRef.current = node
+                    }}
+                    onClick={() => setMenuOpen((prev) => !prev)}
+                    onMouseEnter={() => showTopPanelHint("menu")}
+                    onFocus={() => showTopPanelHint("menu")}
+                    className={`flex h-[38px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[46px] ${
+                      menuOpen
+                        ? "border-white/80 bg-white/20 text-white"
+                        : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
+                    }`}
+                  >
+                    <svg width="19" height="19" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+                      <path d="M2.5 5H13.5" />
+                      <path d="M2.5 8H13.5" />
+                      <path d="M2.5 11H13.5" />
+                    </svg>
+                  </button>
+                  <span
+                    className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[126px] md:bottom-[106px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
+                      topPanelHoverKey === "menu" ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    {TOP_PANEL_MENU_TOOLTIP_TEXT}
+                  </span>
+                </div>
+                <div className="relative">
                   <button
                     onClick={() => {
                       showTopPanelHint("photo:single")
@@ -6845,14 +6850,14 @@ export default function AstrologyCalculator() {
                     {photoTooltipText}
                   </span>
                 </div>
-                <div className="relative p-0 md:p-0.5 md:px-1 md:py-1">
+                <div className="relative">
                   <button
                     onClick={openInfoOverlay}
                     onMouseEnter={() => setTopPanelHoverKey("reset:info")}
                     onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
                     onFocus={() => setTopPanelHoverKey("reset:info")}
                     onBlur={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
-                    className={`h-[38px] w-full border px-[6px] py-0 font-mono text-[5.6px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:px-[10px] md:py-1 md:text-[11.5px] ${
+                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[10px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:text-[13px] ${
                       topPanelHoverKey === "reset:info"
                         ? "border-white/80 bg-white/20 text-white"
                         : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
@@ -6861,14 +6866,14 @@ export default function AstrologyCalculator() {
                     {ui.info}
                   </button>
                 </div>
-                <div className="relative p-0 md:p-0.5 md:px-1 md:py-1">
+                <div className="relative">
                   <button
                     onClick={resetToInitialState}
                     onMouseEnter={() => setTopPanelHoverKey("reset:main")}
                     onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
                     onFocus={() => setTopPanelHoverKey("reset:main")}
                     onBlur={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
-                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[5.6px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:px-1.5 md:py-1 md:text-[11.5px] ${
+                    className={`h-[38px] w-full border px-1 py-0 font-mono text-[10px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[46px] md:text-[13px] ${
                       topPanelHoverKey === "reset:main"
                         ? "border-white/80 bg-white/20 text-white"
                         : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
@@ -6877,19 +6882,21 @@ export default function AstrologyCalculator() {
                     {ui.reset}
                   </button>
                 </div>
-                <div className="relative p-0 md:p-0.5 md:px-1 md:py-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      stopCurrentPerformance()
-                      setShowSubject(true)
-                      setMenuOpen(false)
-                    }}
-                    className="h-[38px] w-full border border-white/50 bg-transparent px-1 py-0 font-mono text-[5px] font-bold uppercase tracking-[0.09em] leading-none text-white/80 transition-colors hover:border-white/80 hover:bg-white/20 hover:text-white md:h-[46px] md:text-[10.5px]"
-                  >
-                    {ui.dataInput}
-                  </button>
-                </div>
+              </div>
+
+              {/* Row 3 — Data Input (full width) */}
+              <div className="pointer-events-auto">
+                <button
+                  type="button"
+                  onClick={() => {
+                    stopCurrentPerformance()
+                    setShowSubject(true)
+                    setMenuOpen(false)
+                  }}
+                  className="h-[44px] w-full border border-white/60 bg-transparent px-2 py-0 font-mono text-[13px] font-bold uppercase tracking-[0.18em] leading-none text-white transition-colors hover:border-white hover:bg-white/20 md:h-[52px] md:text-[16px]"
+                >
+                  {ui.dataInput}
+                </button>
               </div>
               {isExportingMp3 && (
                 <div className="mt-1.5 text-center font-mono text-[7px] md:text-[11px] uppercase tracking-wide text-white/70">
