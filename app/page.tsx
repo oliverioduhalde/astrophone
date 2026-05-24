@@ -127,10 +127,13 @@ const DEFAULT_RENDER_PHASES: RenderPhases = {
   element: true,
   fmPad: false,
   normalizePerLayer: true,
-  renormalizeMix: false,
-  finalCompression: false,
+  renormalizeMix: true,
+  finalCompression: true,
 }
-const RENDER_PHASES_STORAGE_KEY = "astrophone:render-phases-v1"
+// Bumped v1 → v2 with the new preset (renormalizeMix + finalCompression
+// ON). Old persisted values would otherwise pin returning users to the
+// previous OFF defaults.
+const RENDER_PHASES_STORAGE_KEY = "astrophone:render-phases-v2"
 const RENDER_PHASE_CACHE_INVALIDATING_KEYS: ReadonlyArray<keyof RenderPhases> = [
   "planets",
   "background",
@@ -1102,7 +1105,7 @@ export default function AstrologyCalculator() {
   const [loading, setLoading] = useState(false)
   const [isPreparingPlaybackAudio, setIsPreparingPlaybackAudio] = useState(false)
 
-  const [loopDuration, setLoopDuration] = useState(180)
+  const [loopDuration, setLoopDuration] = useState(120)
   const [isLoopRunning, setIsLoopRunning] = useState(false)
   const [pointerRotation, setPointerRotation] = useState(0)
   const [pointerOpacity, setPointerOpacity] = useState(1)
@@ -1114,7 +1117,7 @@ export default function AstrologyCalculator() {
   const [audioFadeIn, setAudioFadeIn] = useState(5)
   const [audioFadeOut, setAudioFadeOut] = useState(10)
   const [backgroundVolume, setBackgroundVolume] = useState(2)
-  const [elementSoundVolume, setElementSoundVolume] = useState(2)
+  const [elementSoundVolume, setElementSoundVolume] = useState(0.5)
   const [dynAspectsFadeIn, setDynAspectsFadeIn] = useState(3)
   const [dynAspectsSustain, setDynAspectsSustain] = useState(2)
   const [dynAspectsFadeOut, setDynAspectsFadeOut] = useState(15)
@@ -5335,6 +5338,7 @@ export default function AstrologyCalculator() {
                         type="range"
                         min="0"
                         max="100"
+                        step="0.5"
                         value={elementSoundVolume}
                         onChange={(e) => setElementSoundVolume(Number(e.target.value))}
                         className="menu-slider flex-none w-32 h-[2px] bg-white rounded cursor-pointer appearance-none"
