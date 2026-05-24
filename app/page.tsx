@@ -4326,7 +4326,11 @@ export default function AstrologyCalculator() {
     showPointer &&
     (isLoopRunning || (!isLoopRunning && navigationMode === "sequential"))
   const isPlaybackActive = isLoopRunning && !isPaused
-  const isPlaybackUiHidden = isPlaybackActive && !playbackUiVisible
+  // [T-31] menuOpen overrides the auto-hide. While the burger panel is
+  // open the entire playback UI stays visible — otherwise the panel
+  // (which inherits playbackUiShellClassName) fades together with the
+  // controls, locking the user out mid-tweak.
+  const isPlaybackUiHidden = isPlaybackActive && !playbackUiVisible && !menuOpen
   const playbackUiShellClassName = `playback-ui-shell ${
     isPlaybackUiHidden ? "playback-ui-shell--hidden" : "playback-ui-shell--visible"
   }`
@@ -4414,6 +4418,19 @@ export default function AstrologyCalculator() {
     if (!isPlaybackUiHidden) return
     setMenuOpen(false)
   }, [isPlaybackUiHidden])
+
+  // [T-31] While the menu is open, pause the auto-hide timer so the
+  // panel stays put. When the menu closes, restart the timer from
+  // zero so the chart UI fades out gracefully instead of vanishing
+  // the instant the user dismisses the menu.
+  useEffect(() => {
+    if (menuOpen) {
+      clearPlaybackUiHideTimeout()
+      setPlaybackUiVisible(true)
+    } else if (isPlaybackActive) {
+      schedulePlaybackUiHide(PLAYBACK_UI_AUTO_HIDE_DELAY_MS)
+    }
+  }, [menuOpen, isPlaybackActive, clearPlaybackUiHideTimeout, schedulePlaybackUiHide])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -4756,39 +4773,74 @@ export default function AstrologyCalculator() {
               <span>{Math.round(loadingDisplayProgress)}%</span>
             </div>
 
+            {/* [T-32] Paragraph status dots (●○○) — pure indicator, not
+                nav. Sits above the paragraph and reflects which slide is
+                active. Navigation still happens via < / >. */}
+            <div
+              className="mt-5 flex items-center justify-center gap-2 md:gap-2.5"
+              aria-hidden="true"
+            >
+              {loadingIntroParagraphs.map((_, index) => {
+                const isActive = index === loadingIntroIndex
+                return (
+                  <span
+                    key={`loading-status-dot-${index}`}
+                    className={`block h-2 w-2 md:h-2.5 md:w-2.5 rounded-full border border-white/80 transition-opacity duration-200 ${
+                      isActive ? "bg-white opacity-100" : "bg-white/15 opacity-45"
+                    }`}
+                  />
+                )
+              })}
+            </div>
+
             <div className="mt-5 relative min-h-[500px] md:min-h-[560px] overflow-visible">
-              <div className="mx-auto max-w-[980px] px-2 pt-10 pb-8 flex flex-col items-start gap-7">
+              {/* [T-32] Single row: [<] [centered paragraph] [>].
+                  Text is centered both horizontally and within the
+                  flex space between the arrows. Arrows stay fixed at
+                  the edges so the layout doesn't shift between
+                  short and long paragraphs. */}
+              <div className="mx-auto max-w-[980px] px-2 pt-10 pb-8 flex items-center justify-between gap-3 md:gap-6">
+                <button
+                  onClick={retreatLoadingIntroParagraph}
+                  disabled={isFirstIntroParagraph}
+                  className={`shrink-0 font-mono text-[21px] md:text-[36px] leading-none transition-colors px-2 py-1 ${
+                    isFirstIntroParagraph
+                      ? "text-white/30 cursor-not-allowed"
+                      : "text-white/50 hover:text-white"
+                  }`}
+                  aria-label={language === "es" ? "Anterior" : "Previous"}
+                >
+                  {"<"}
+                </button>
                 <p
                   key={`loading-current-${loadingIntroTick}-${loadingIntroIndex}`}
                   onClick={advanceLoadingIntroParagraph}
-                  className="loading-intro-fade-in font-mono cursor-pointer text-[10px] md:text-[26px] leading-[1.36]"
+                  className="loading-intro-fade-in font-mono cursor-pointer flex-1 text-[10px] md:text-[26px] leading-[1.36] text-center"
                   style={{
                     color: "rgba(255,255,255,0.7)",
-                    textAlign: "left",
                     whiteSpace: "pre-line",
                   }}
                 >
                   {loadingIntroParagraphs[loadingIntroIndex] ?? ""}
                 </p>
-                <div className="mt-8 w-full flex items-center justify-between">
-                  <button
-                    onClick={retreatLoadingIntroParagraph}
-                    disabled={isFirstIntroParagraph}
-                    className={`font-mono text-[21px] md:text-[36px] leading-none transition-colors px-2 py-1 ${
-                      isFirstIntroParagraph
-                        ? "text-white/30 cursor-not-allowed"
-                        : "text-white/50 hover:text-white"
-                    }`}
-                  >
-                    {"<"}
-                  </button>
-                  <button
-                    onClick={advanceLoadingIntroParagraph}
-                    className="play-idle-pulse font-mono text-[21px] md:text-[36px] leading-none text-white/50 hover:text-white transition-colors px-2 py-1"
-                  >
-                    {isLastIntroParagraph ? ">" : ">"}
-                  </button>
-                </div>
+                <button
+                  // [T-32] On the last slide, the forward arrow acts
+                  // identically to SKIP — bypasses the audio-engine
+                  // gate and jumps straight to the form.
+                  onClick={isLastIntroParagraph ? skipLoadingIntro : advanceLoadingIntroParagraph}
+                  className="shrink-0 play-idle-pulse font-mono text-[21px] md:text-[36px] leading-none text-white/50 hover:text-white transition-colors px-2 py-1"
+                  aria-label={
+                    isLastIntroParagraph
+                      ? language === "es"
+                        ? "Continuar"
+                        : "Continue"
+                      : language === "es"
+                        ? "Siguiente"
+                        : "Next"
+                  }
+                >
+                  {">"}
+                </button>
               </div>
               <div className="absolute inset-x-0 bottom-[190px] flex items-center justify-between px-1 md:bottom-3 md:px-0">
                 <span className="font-mono text-[10px] md:text-[12px] uppercase tracking-[0.2em] text-white/55 px-2 py-1">
