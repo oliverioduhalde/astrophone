@@ -112,6 +112,39 @@ type SubjectPreset = "manual" | "here_now" | "ba" | "cairo" | "ba77"
 type MajorAspectKey = "conjunction" | "opposition" | "trine" | "square" | "sextile"
 type Language = "en" | "es"
 
+// [T-30] User-toggleable phases of the audio render pipeline.
+// Exposed via Advanced → Render phases in the burger menu.
+// fmPad defaults OFF even in fm_pad/hybrid modes — explicit opt-in.
+// finalCompression is a live-playback stage; toggling it does NOT
+// invalidate the offline-render cache. All other toggles DO.
+type RenderPhases = {
+  planets: boolean
+  background: boolean
+  element: boolean
+  fmPad: boolean
+  normalizePerLayer: boolean
+  renormalizeMix: boolean
+  finalCompression: boolean
+}
+const DEFAULT_RENDER_PHASES: RenderPhases = {
+  planets: true,
+  background: true,
+  element: true,
+  fmPad: false,
+  normalizePerLayer: true,
+  renormalizeMix: false,
+  finalCompression: false,
+}
+const RENDER_PHASES_STORAGE_KEY = "astrophone:render-phases-v1"
+const RENDER_PHASE_CACHE_INVALIDATING_KEYS: ReadonlyArray<keyof RenderPhases> = [
+  "planets",
+  "background",
+  "element",
+  "fmPad",
+  "normalizePerLayer",
+  "renormalizeMix",
+]
+
 type NavigationPlaybackTimelineItem = {
   name: string
   angle: number
@@ -1147,6 +1180,66 @@ export default function AstrologyCalculator() {
   const loadingLanguageHintClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [locationSuggestions, setLocationSuggestions] = useState<GeoSuggestion[]>([])
   const [isResolvingLocation, setIsResolvingLocation] = useState(false)
+
+  // [T-30] Render-phase toggles. Persisted in localStorage so user
+  // tweaks survive reloads. Loaded lazily on first client render to
+  // avoid SSR/hydration mismatches.
+  const [renderPhases, setRenderPhases] = useState<RenderPhases>(DEFAULT_RENDER_PHASES)
+  const [renderPhasesHydrated, setRenderPhasesHydrated] = useState(false)
+  const [lastRenderMs, setLastRenderMs] = useState<number | null>(null)
+
+  // Hydrate from localStorage on mount (client only).
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      const raw = window.localStorage.getItem(RENDER_PHASES_STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<RenderPhases>
+        setRenderPhases({ ...DEFAULT_RENDER_PHASES, ...parsed })
+      }
+    } catch {
+      // ignore corrupt storage, fall back to defaults
+    }
+    setRenderPhasesHydrated(true)
+  }, [])
+
+  // Persist after hydration so we never overwrite stored values with
+  // defaults during the first render.
+  useEffect(() => {
+    if (!renderPhasesHydrated || typeof window === "undefined") return
+    try {
+      window.localStorage.setItem(RENDER_PHASES_STORAGE_KEY, JSON.stringify(renderPhases))
+    } catch {
+      // storage may be full or disabled (private mode); silent fail OK
+    }
+  }, [renderPhases, renderPhasesHydrated])
+
+  // Ref mirror so render-pipeline callbacks (live inside a hook with
+  // its own closure) can read current phases without us threading
+  // them through every dependency array.
+  const renderPhasesRef = useRef<RenderPhases>(renderPhases)
+  useEffect(() => {
+    renderPhasesRef.current = renderPhases
+  }, [renderPhases])
+
+  // Toggle setter that, for cache-invalidating phases (1..6),
+  // will also nuke the offline playback cache. The cache-clearing
+  // hookup is wired in [T-30-b]; for now this is a pure state
+  // setter so behavior is unchanged.
+  const setRenderPhase = useCallback(
+    <K extends keyof RenderPhases>(key: K, value: RenderPhases[K]) => {
+      setRenderPhases((prev) => {
+        if (prev[key] === value) return prev
+        return { ...prev, [key]: value }
+      })
+      // NOTE: actual cache invalidation lands in T-30-b once we
+      // expose clearOfflinePlaybackCache from usePlanetAudio.
+      if (RENDER_PHASE_CACHE_INVALIDATING_KEYS.includes(key)) {
+        // placeholder — no-op until T-30-b
+      }
+    },
+    [],
+  )
   const chartAspectsKeyRef = useRef("__chart__")
   const subjectHoverTouchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadingIntroParagraphs = useMemo(() => LOADING_INTRO_PARAGRAPHS_BY_LANGUAGE[language], [language])
