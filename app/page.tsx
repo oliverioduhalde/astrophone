@@ -4,7 +4,12 @@ import { useState, useEffect, useMemo, useRef, useCallback, type CSSProperties }
 import { createPortal } from "react-dom"
 import { calculateCustomHoroscope, type HoroscopeData } from "@/lib/astrology"
 import { GlyphAnimationManager } from "@/lib/glyph-animation"
-import { usePlanetAudio, type OfflineMp3AspectEvent, type OfflineMp3PlanetEvent } from "@/lib/use-planet-audio"
+import {
+  usePlanetAudio,
+  type OfflineMp3AspectEvent,
+  type OfflineMp3PlanetEvent,
+  type RenderPhases,
+} from "@/lib/use-planet-audio"
 
 const PLANET_GLYPH_SVGS: Record<string, string> = {
   sun: "/planet-glyphs/sun.svg",
@@ -112,20 +117,10 @@ type SubjectPreset = "manual" | "here_now" | "ba" | "cairo" | "ba77"
 type MajorAspectKey = "conjunction" | "opposition" | "trine" | "square" | "sextile"
 type Language = "en" | "es"
 
-// [T-30] User-toggleable phases of the audio render pipeline.
-// Exposed via Advanced → Render phases in the burger menu.
-// fmPad defaults OFF even in fm_pad/hybrid modes — explicit opt-in.
-// finalCompression is a live-playback stage; toggling it does NOT
-// invalidate the offline-render cache. All other toggles DO.
-type RenderPhases = {
-  planets: boolean
-  background: boolean
-  element: boolean
-  fmPad: boolean
-  normalizePerLayer: boolean
-  renormalizeMix: boolean
-  finalCompression: boolean
-}
+// [T-30] RenderPhases type lives in use-planet-audio.ts (canonical
+// shape next to the renderer). Defaults below are the consumer's
+// view: planets/bg/element/normalizePerLayer ON, fmPad/renormalize/
+// finalCompression OFF.
 const DEFAULT_RENDER_PHASES: RenderPhases = {
   planets: true,
   background: true,
@@ -1222,21 +1217,17 @@ export default function AstrologyCalculator() {
     renderPhasesRef.current = renderPhases
   }, [renderPhases])
 
-  // Toggle setter that, for cache-invalidating phases (1..6),
-  // will also nuke the offline playback cache. The cache-clearing
-  // hookup is wired in [T-30-b]; for now this is a pure state
-  // setter so behavior is unchanged.
+  // Toggle setter. Cache invalidation for render-affecting phases
+  // (1..6) happens in a separate useEffect after the audio hook is
+  // instantiated — see the "Nuclear cache invalidation" effect below
+  // the prepareOrbitalStarBackground effect. finalCompression is
+  // explicitly excluded from invalidation: it's a post-buffer stage.
   const setRenderPhase = useCallback(
     <K extends keyof RenderPhases>(key: K, value: RenderPhases[K]) => {
       setRenderPhases((prev) => {
         if (prev[key] === value) return prev
         return { ...prev, [key]: value }
       })
-      // NOTE: actual cache invalidation lands in T-30-b once we
-      // expose clearOfflinePlaybackCache from usePlanetAudio.
-      if (RENDER_PHASE_CACHE_INVALIDATING_KEYS.includes(key)) {
-        // placeholder — no-op until T-30-b
-      }
     },
     [],
   )
@@ -1479,6 +1470,7 @@ export default function AstrologyCalculator() {
     audioLevelRightPost,
     compressionReductionDb,
     renderOfflineMp3,
+    clearOfflinePlaybackCache,
   } =
     usePlanetAudio({
       fadeIn: audioFadeIn,
@@ -1499,6 +1491,7 @@ export default function AstrologyCalculator() {
       isChordMode: navigationMode === "astral_chord",
       reverbMixPercent,
       chordReverbMixPercent,
+      renderPhases,
     })
 
   useEffect(() => {
@@ -1507,6 +1500,27 @@ export default function AstrologyCalculator() {
     const sunSignIndex = typeof sunDegrees === "number" ? Math.floor(norm360(sunDegrees) / 30) % 12 : null
     void prepareOrbitalStarBackground(sunSignIndex, { modalEnabled, force: true })
   }, [horoscopeData, modalEnabled, prepareOrbitalStarBackground])
+
+  // [T-30-b] Nuclear cache invalidation when any render-affecting
+  // phase flips. The finalCompression toggle is INTENTIONALLY excluded
+  // from the dep array — it's a post-buffer playback stage, the
+  // already-rendered buffer is still valid. Skipped during initial
+  // hydration so we don't trash the cache before the user touches
+  // anything. This is what makes the spec "nuclear D3=a" honest:
+  // every flip = full wipe.
+  useEffect(() => {
+    if (!renderPhasesHydrated) return
+    clearOfflinePlaybackCache()
+  }, [
+    renderPhases.planets,
+    renderPhases.background,
+    renderPhases.element,
+    renderPhases.fmPad,
+    renderPhases.normalizePerLayer,
+    renderPhases.renormalizeMix,
+    renderPhasesHydrated,
+    clearOfflinePlaybackCache,
+  ])
   const lastPlayedPlanetRef = useRef<string | null>(null)
   const lastPlanetTriggerAtMsByNameRef = useRef<Map<string, number>>(new Map())
   const totalLoadingIntroDurationMs = loadingIntroParagraphs.length * LOADING_SUBTITLE_STEP_MS
@@ -3211,6 +3225,12 @@ export default function AstrologyCalculator() {
       playbackPreparationRequestIdRef.current !== preparationRequestId
     ) {
       return
+    }
+
+    // [T-30-b] Surface the render time to the Advanced panel.
+    // 0 ms = cache hit; non-zero = fresh render.
+    if (preparedPlayback) {
+      setLastRenderMs(preparedPlayback.renderMs)
     }
 
     setIsPreparingPlaybackAudio(false)

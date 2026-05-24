@@ -17,6 +17,29 @@ interface AudioTrack {
 
 type AudioEngineMode = "samples" | "hybrid" | "fm_pad" | "tibetan_bowls" | "tibetan_samples"
 
+// [T-30] User-toggleable phases of the render/playback pipeline.
+// Defined here (next to the renderer) so consumers can import a
+// single canonical shape and so the hook can gate behavior without
+// the consumer needing to know how it's wired internally.
+export interface RenderPhases {
+  planets: boolean
+  background: boolean
+  element: boolean
+  fmPad: boolean
+  normalizePerLayer: boolean
+  renormalizeMix: boolean
+  finalCompression: boolean
+}
+export const DEFAULT_RENDER_PHASES_INTERNAL: RenderPhases = {
+  planets: true,
+  background: true,
+  element: true,
+  fmPad: false,
+  normalizePerLayer: true,
+  renormalizeMix: false,
+  finalCompression: false,
+}
+
 interface AudioEnvelope {
   fadeIn: number
   fadeOut: number
@@ -36,6 +59,7 @@ interface AudioEnvelope {
   isChordMode?: boolean
   reverbMixPercent?: number
   chordReverbMixPercent?: number
+  renderPhases?: RenderPhases
 }
 
 interface Position3D {
@@ -563,6 +587,10 @@ export function usePlanetAudio(
     typeof envelope.modalSunSignIndex === "number" ? envelope.modalSunSignIndex : null,
   )
   const audioEngineModeRef = useRef<AudioEngineMode>(envelope.audioEngineMode || "samples")
+  // [T-30-b] Mirror render-phase toggles so the offline-render and
+  // live-playback callbacks can read current values without us
+  // threading them through every dependency array.
+  const renderPhasesRef = useRef<RenderPhases>(envelope.renderPhases || DEFAULT_RENDER_PHASES_INTERNAL)
   const toneModuleRef = useRef<any>(null)
   const fmPadSynthRef = useRef<any>(null)
   const fmPadGainRef = useRef<any>(null)
@@ -652,6 +680,17 @@ export function usePlanetAudio(
   useEffect(() => {
     audioEngineModeRef.current = envelope.audioEngineMode || "samples"
   }, [envelope.audioEngineMode])
+
+  // [T-30-b] Keep renderPhasesRef in sync with prop. We do not
+  // invalidate the cache here — the parent component is responsible
+  // for calling clearOfflinePlaybackCache() when a render-affecting
+  // toggle flips. This lets the parent batch invalidations and skip
+  // them for the compression toggle (which is post-buffer).
+  useEffect(() => {
+    if (envelope.renderPhases) {
+      renderPhasesRef.current = envelope.renderPhases
+    }
+  }, [envelope.renderPhases])
 
   useEffect(() => {
     reverbMixPercentRef.current = envelope.reverbMixPercent ?? 20
@@ -1464,8 +1503,16 @@ export function usePlanetAudio(
       includePlanetEvents = true,
     ): Promise<AudioBuffer | null> => {
       const durationSec = Math.max(0.5, options.durationSec)
-      const hasPlanetEvents = includePlanetEvents && Boolean(options.events?.length)
-      const hasAmbientLayers = Boolean(options.includeBackground || (options.includeElement && options.elementName))
+      // [T-30-b] Apply user phase toggles. Each "effective*" flag is
+      // the AND of the per-call option and the global phase. This
+      // keeps the rest of the function untouched: it just consults
+      // effective* instead of options.include* in three places below.
+      const phases = renderPhasesRef.current
+      const effectivePlanetEvents = includePlanetEvents && phases.planets
+      const effectiveBackground = Boolean(options.includeBackground) && phases.background
+      const effectiveElement = Boolean(options.includeElement) && phases.element
+      const hasPlanetEvents = effectivePlanetEvents && Boolean(options.events?.length)
+      const hasAmbientLayers = Boolean(effectiveBackground || (effectiveElement && options.elementName))
       if (!hasPlanetEvents && !hasAmbientLayers) return null
 
       try {
@@ -1527,7 +1574,7 @@ export function usePlanetAudio(
             : modalSunSignIndexRef.current
 
         let orbitalStarBackgroundBuffer: AudioBuffer | null = null
-        if (options.includeBackground) {
+        if (effectiveBackground) {
           orbitalStarBackgroundBuffer = await prepareOrbitalStarBackground(modalSunSignIndex, {
             modalEnabled,
             force: false,
@@ -1613,7 +1660,7 @@ export function usePlanetAudio(
           source.stop(endTime)
         }
 
-        if (options.includeBackground && orbitalStarBackgroundBuffer) {
+        if (effectiveBackground && orbitalStarBackgroundBuffer) {
           const backgroundSource = offlineContext.createBufferSource()
           const backgroundGainNode = offlineContext.createGain()
           const backgroundTargetGain = Math.max(0, (options.backgroundVolumePercent ?? backgroundVolumeRef.current) / 100)
@@ -1635,7 +1682,7 @@ export function usePlanetAudio(
           backgroundSource.stop(durationSec)
         }
 
-        if (options.includeElement && options.elementName) {
+        if (effectiveElement && options.elementName) {
           const elementBuffer = audioBuffersRef.current[options.elementName]
           if (elementBuffer) {
             const rulerPlanet = getSignRulerPlanetName(modalSunSignIndex)
@@ -1705,7 +1752,11 @@ export function usePlanetAudio(
           }
         }
 
-        return normalizeBufferPeak(await offlineContext.startRendering(), -1)
+        // [T-30-b] Per-layer peak normalize, gated by phases.normalizePerLayer.
+        const renderedSampleBuffer = await offlineContext.startRendering()
+        return phases.normalizePerLayer
+          ? normalizeBufferPeak(renderedSampleBuffer, -1)
+          : renderedSampleBuffer
       } catch (error) {
         console.error("[v0] Error rendering offline sample buffer:", error)
         return null
@@ -1847,28 +1898,45 @@ export function usePlanetAudio(
       const renderStartedAt = performance.now()
       const renderPromise = (async () => {
         const audioMode = audioEngineModeRef.current || "samples"
+        const phases = renderPhasesRef.current
+
+        // [T-30-b] Gate per-phase. When fmPad is OFF in fm_pad/hybrid
+        // modes we still need the ambient/samples buffer so playback
+        // is not empty. When renormalizeMix is ON we apply a final
+        // peak-normalize after the mix.
+        const finalize = async (buffer: AudioBuffer | null): Promise<AudioBuffer | null> => {
+          if (!buffer) return null
+          if (phases.renormalizeMix) return normalizeBufferPeak(buffer, -1)
+          return buffer
+        }
 
         if (audioMode === "fm_pad") {
           const [ambientBuffer, synthBuffer] = await Promise.all([
             renderOfflineSampleBuffer(options, "samples", false),
-            renderOfflineFmPadBuffer(options),
+            phases.fmPad ? renderOfflineFmPadBuffer(options) : Promise.resolve(null),
           ])
-          return await mixOfflineBuffers([ambientBuffer, synthBuffer])
+          if (!ambientBuffer && !synthBuffer) return null
+          if (!synthBuffer) return await finalize(ambientBuffer)
+          if (!ambientBuffer) return await finalize(synthBuffer)
+          return await finalize(await mixOfflineBuffers([ambientBuffer, synthBuffer]))
         }
 
         if (audioMode === "hybrid") {
           const [sampleBuffer, synthBuffer] = await Promise.all([
             renderOfflineSampleBuffer(options, "samples", true),
-            renderOfflineFmPadBuffer(options),
+            phases.fmPad ? renderOfflineFmPadBuffer(options) : Promise.resolve(null),
           ])
-          return await mixOfflineBuffers([sampleBuffer, synthBuffer])
+          if (!sampleBuffer && !synthBuffer) return null
+          if (!synthBuffer) return await finalize(sampleBuffer)
+          if (!sampleBuffer) return await finalize(synthBuffer)
+          return await finalize(await mixOfflineBuffers([sampleBuffer, synthBuffer]))
         }
 
         if (audioMode === "tibetan_samples") {
-          return await renderOfflineSampleBuffer(options, "tibetan_samples", true)
+          return await finalize(await renderOfflineSampleBuffer(options, "tibetan_samples", true))
         }
 
-        return await renderOfflineSampleBuffer(options, "samples", true)
+        return await finalize(await renderOfflineSampleBuffer(options, "samples", true))
       })()
 
       offlinePlaybackPromiseCacheRef.current.set(cacheKey, renderPromise)
@@ -1914,7 +1982,24 @@ export function usePlanetAudio(
       gainNode.gain.value = 1
       source.buffer = prepared.buffer
       source.connect(gainNode)
-      gainNode.connect(ctx.destination)
+
+      // [T-30-b] Optional transparent final compressor (ratio 1.2:1).
+      // Inserted in the live-playback chain when phases.finalCompression
+      // is ON. Designed to be near-inaudible: only catches sharp peaks,
+      // soft knee, gentle attack/release. Bypasses to direct destination
+      // when OFF. No cache invalidation: this is post-buffer.
+      if (renderPhasesRef.current.finalCompression) {
+        const finalCompressor = ctx.createDynamicsCompressor()
+        finalCompressor.threshold.value = -6
+        finalCompressor.knee.value = 40
+        finalCompressor.ratio.value = 1.2
+        finalCompressor.attack.value = 0.010
+        finalCompressor.release.value = 0.200
+        gainNode.connect(finalCompressor)
+        finalCompressor.connect(ctx.destination)
+      } else {
+        gainNode.connect(ctx.destination)
+      }
 
       source.onended = () => {
         if (activeOfflinePlaybackSourceRef.current === source) {
@@ -2838,6 +2923,14 @@ export function usePlanetAudio(
     }
   }, [stopAll, stopBackgroundSound, stopElementBackground])
 
+  // [T-30-b] Nuke the offline render cache. Called by the parent
+  // when a render-affecting phase toggle flips, so the next playback
+  // reflects the new phase configuration. Safe to call repeatedly.
+  const clearOfflinePlaybackCache = useCallback(() => {
+    offlinePlaybackCacheRef.current.clear()
+    offlinePlaybackPromiseCacheRef.current.clear()
+  }, [])
+
   return {
     playPlanetSound,
     stopAll,
@@ -2858,5 +2951,6 @@ export function usePlanetAudio(
     audioLevelRightPost,
     compressionReductionDb,
     renderOfflineMp3,
+    clearOfflinePlaybackCache,
   }
 }
