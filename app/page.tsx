@@ -1040,6 +1040,13 @@ const calculatePointerState = (elapsed: number, duration: number, ascDegrees: nu
 
 export default function AstrologyCalculator() {
   const [menuOpen, setMenuOpen] = useState(false)
+  // [T-35] Consolidated download popover state. Click the ↓ in the
+  // tools row to open a horizontal expansion with the three labeled
+  // options. Outside-click closes it. Lives next to menuOpen so the
+  // existing outside-click pattern transfers cleanly.
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false)
+  const downloadMenuButtonRef = useRef<HTMLButtonElement | null>(null)
+  const downloadMenuPanelRef = useRef<HTMLDivElement | null>(null)
   const [showSubject, setShowSubject] = useState(true)
   const [isFetchingHereNow, setIsFetchingHereNow] = useState(false)
   const hasAutoAppliedHereNowRef = useRef(false)
@@ -1951,6 +1958,25 @@ export default function AstrologyCalculator() {
   }, [])
 
   useEffect(() => {
+    // [T-35] Mirror outside-click behavior for the download popover
+    // before the menuOpen handler runs. They never overlap visually
+    // so independent listeners are safe.
+    if (downloadMenuOpen) {
+      const handleDownloadOutsideClick = (event: MouseEvent | TouchEvent) => {
+        const target = event.target as Node | null
+        if (!target) return
+        if (downloadMenuButtonRef.current?.contains(target)) return
+        if (downloadMenuPanelRef.current?.contains(target)) return
+        setDownloadMenuOpen(false)
+      }
+      window.addEventListener("mousedown", handleDownloadOutsideClick, true)
+      window.addEventListener("touchstart", handleDownloadOutsideClick, true)
+      return () => {
+        window.removeEventListener("mousedown", handleDownloadOutsideClick, true)
+        window.removeEventListener("touchstart", handleDownloadOutsideClick, true)
+      }
+    }
+
     if (!menuOpen) return
 
     const handlePointerDownOutsideMenu = (event: PointerEvent) => {
@@ -1966,7 +1992,7 @@ export default function AstrologyCalculator() {
     return () => {
       window.removeEventListener("pointerdown", handlePointerDownOutsideMenu)
     }
-  }, [menuOpen])
+  }, [menuOpen, downloadMenuOpen])
 
   useEffect(() => {
     if (!menuOpen) {
@@ -5949,20 +5975,10 @@ export default function AstrologyCalculator() {
                       >
                         {navModeHintLabel[mode]}
                       </button>
-                      <button
-                        type="button"
-                        disabled
-                        onMouseEnter={() => showTopPanelHint(downloadHoverKey)}
-                        onFocus={() => showTopPanelHint(downloadHoverKey)}
-                        className="flex h-full w-[24%] min-w-[28px] items-center justify-center border-l border-white/20 text-white/20 cursor-not-allowed"
-                        title={TOP_PANEL_DOWNLOAD_TOOLTIP_TEXT}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.45" aria-hidden="true">
-                          <path d="M3 8.8V12.4H13V8.8" />
-                          <path d="M8 2.8V9.1" />
-                          <path d="M5.9 7L8 9.1L10.1 7" />
-                        </svg>
-                      </button>
+                      {/* [T-35] Download icon removed from the form view.
+                          Downloads now live exclusively in the playback
+                          toolbar (single ↓ button that expands into the
+                          three Download mode options). */}
                       <span
                         className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[160px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
                           tooltipText ? "opacity-100" : "opacity-0"
@@ -7119,34 +7135,10 @@ export default function AstrologyCalculator() {
                           </span>
                           <span className="relative">{navModeHintLabel[mode]}</span>
                         </button>
-                        <button
-                          onClick={() => handleDownloadButtonPress(mode)}
-                          onMouseEnter={() => showTopPanelHint(downloadHoverKey)}
-                          onFocus={() => showTopPanelHint(downloadHoverKey)}
-                          disabled={!horoscopeData || isExportingMp3}
-                          className={`flex h-full w-[24%] min-w-[24px] items-center justify-center border-l transition-colors ${
-                            !horoscopeData || isExportingMp3
-                              ? "border-white/20 text-white/20 cursor-not-allowed"
-                              : isModePlaybackActive
-                                ? "border-black/25 text-black"
-                                : "border-white/30 hover:bg-white/12 hover:text-white"
-                          }`}
-                          title={TOP_PANEL_DOWNLOAD_TOOLTIP_TEXT}
-                        >
-                          <svg
-                            width="19"
-                            height="19"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.65"
-                            aria-hidden="true"
-                          >
-                            <path d="M3 8.8V12.4H13V8.8" />
-                            <path d="M8 2.8V9.1" />
-                            <path d="M5.9 7L8 9.1L10.1 7" />
-                          </svg>
-                        </button>
+                        {/* [T-35] Per-mode download button removed. A
+                            single consolidated ↓ in the tools row (below)
+                            now opens a popover with the three options
+                            ("Download ORBITAL/CHART/CHORD Audio"). */}
                         <span
                           className={`pointer-events-none ${tooltipViewportClass} whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
                             tooltipText ? "opacity-100" : "opacity-0"
@@ -7161,7 +7153,7 @@ export default function AstrologyCalculator() {
               </div>
 
               {/* Row 2 — Tools (small, 4 cols) */}
-              <div className="grid grid-cols-4 gap-1 md:gap-1.5 pointer-events-auto">
+              <div className="grid grid-cols-5 gap-1 md:gap-1.5 pointer-events-auto">
                 <div className="relative">
                   <button
                     ref={(node) => {
@@ -7262,6 +7254,98 @@ export default function AstrologyCalculator() {
                   >
                     {photoTooltipText}
                   </span>
+                </div>
+
+                {/* [T-35] Consolidated download. The button itself just
+                    toggles the popover; the popover above shows the
+                    three labeled options ("Download ORBITAL Audio" etc).
+                    While isExportingMp3 is true a faint pulse on the
+                    icon mirrors the Earth-glyph pre-render ring as the
+                    user-side feedback (Q10). */}
+                <div className="relative">
+                  <button
+                    ref={downloadMenuButtonRef}
+                    type="button"
+                    onClick={() => setDownloadMenuOpen((prev) => !prev)}
+                    onMouseEnter={() => showTopPanelHint("download:menu")}
+                    onFocus={() => showTopPanelHint("download:menu")}
+                    disabled={!horoscopeData}
+                    className={`relative flex h-[40px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[48px] ${
+                      !horoscopeData
+                        ? "border-white/20 bg-transparent text-white/20 cursor-not-allowed"
+                        : downloadMenuOpen
+                          ? "border-white/80 bg-white/20 text-white"
+                          : isExportingMp3
+                            ? "border-white/80 bg-white/10 text-white"
+                            : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
+                    }`}
+                    aria-label={language === "es" ? "Descargar audio" : "Download audio"}
+                    aria-expanded={downloadMenuOpen}
+                    aria-haspopup="menu"
+                  >
+                    <svg
+                      width="19"
+                      height="19"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      aria-hidden="true"
+                      className={isExportingMp3 ? "crt-download-icon-pulse" : ""}
+                    >
+                      <path d="M3 8.8V12.4H13V8.8" />
+                      <path d="M8 2.8V9.1" />
+                      <path d="M5.9 7L8 9.1L10.1 7" />
+                    </svg>
+                  </button>
+                  {downloadMenuOpen && (
+                    <div
+                      ref={downloadMenuPanelRef}
+                      role="menu"
+                      className="crt-download-popover absolute right-0 bottom-full mb-2 flex flex-row-reverse gap-1 md:gap-1.5 pointer-events-auto whitespace-nowrap z-[65]"
+                    >
+                      {TOP_PANEL_MODE_ORDER.map((mode) => {
+                        const modeLabel = navModeHintLabel[mode]
+                        const text =
+                          language === "es"
+                            ? `Descargar audio ${modeLabel}`
+                            : `Download ${modeLabel} Audio`
+                        return (
+                          <button
+                            key={`download-option-${mode}`}
+                            type="button"
+                            role="menuitem"
+                            disabled={isExportingMp3}
+                            onClick={() => {
+                              setDownloadMenuOpen(false)
+                              void handleDownloadButtonPress(mode)
+                            }}
+                            className={`flex h-[36px] items-center gap-1.5 border px-3 py-0 font-mono text-[8px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[44px] md:text-[10px] ${
+                              isExportingMp3
+                                ? "border-white/20 text-white/30 cursor-not-allowed"
+                                : "border-white/60 bg-black/60 text-white/90 hover:border-white hover:bg-white/20 hover:text-white"
+                            }`}
+                          >
+                            <svg
+                              width="13"
+                              height="13"
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.6"
+                              aria-hidden="true"
+                              className="shrink-0"
+                            >
+                              <path d="M3 8.8V12.4H13V8.8" />
+                              <path d="M8 2.8V9.1" />
+                              <path d="M5.9 7L8 9.1L10.1 7" />
+                            </svg>
+                            {text}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 

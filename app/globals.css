@@ -621,6 +621,45 @@
   animation: crt-prepare-ring-spin 1.15s linear infinite;
 }
 
+/* [T-35] Pulse on the consolidated download icon while the MP3
+   exporter is running. Mirrors the Earth-glyph pre-render ring's
+   attention pattern, just at button scale. */
+@keyframes crt-download-icon-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.7));
+  }
+  50% {
+    opacity: 0.55;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.95));
+  }
+}
+
+.crt-download-icon-pulse {
+  animation: crt-download-icon-pulse 0.9s ease-in-out infinite;
+}
+
+/* Popover that emerges above the consolidated download button.
+   Keeps the existing crt look (thin borders, dark fill, glow). */
+.crt-download-popover {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.18));
+  animation: crt-download-popover-in 180ms ease-out;
+}
+
+@keyframes crt-download-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scaleX(0.6);
+    transform-origin: right center;
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleX(1);
+    transform-origin: right center;
+  }
+}
+
 .crt-scan-overlay {
   animation: crt-scan-drift 6.8s ease-in-out infinite, crt-flicker-soft 3.8s linear infinite;
   will-change: transform, opacity;
