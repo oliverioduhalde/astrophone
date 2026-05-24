@@ -5511,6 +5511,107 @@ export default function AstrologyCalculator() {
                     </div>
                   </div>
                   )}
+
+                  {/* [T-30-c] Render phases panel. Lives only inside the
+                      Advanced view. Bilingual labels are inlined (no need
+                      to bloat the ui dictionary for a debug surface). */}
+                  <div className="border-t border-gray-600 my-1" />
+                  <div className="font-mono text-[7.5px] uppercase tracking-wide opacity-80">
+                    {language === "es" ? "Fases del render" : "Render phases"}
+                  </div>
+
+                  <div className="font-mono text-[6.5px] uppercase tracking-wide opacity-50 mt-0.5">
+                    {language === "es" ? "Render offline" : "Offline render"}
+                  </div>
+                  {([
+                    { key: "planets", es: "Planetas", en: "Planets" },
+                    { key: "background", es: "Fondo", en: "Background" },
+                    { key: "element", es: "Elemento", en: "Element" },
+                    { key: "fmPad", es: "FM Pad", en: "FM Pad" },
+                  ] as const).map((row) => (
+                    <label
+                      key={`phase-${row.key}`}
+                      className="flex items-center gap-2 font-mono text-[7.5px] uppercase tracking-wide cursor-pointer hover:text-gray-400"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={renderPhases[row.key]}
+                        onChange={(e) => setRenderPhase(row.key, e.target.checked)}
+                        className="w-3 h-3 appearance-none border border-white checked:bg-white checked:border-white cursor-pointer"
+                      />
+                      {language === "es" ? row.es : row.en}
+                    </label>
+                  ))}
+
+                  <div className="font-mono text-[6.5px] uppercase tracking-wide opacity-50 mt-1">
+                    {language === "es" ? "Post-render" : "Post-render"}
+                  </div>
+                  {([
+                    {
+                      key: "normalizePerLayer",
+                      es: "Normalizar -1 dB",
+                      en: "Normalize -1 dB",
+                    },
+                    {
+                      key: "renormalizeMix",
+                      es: "Renormalizar mezcla",
+                      en: "Re-normalize mix",
+                    },
+                  ] as const).map((row) => (
+                    <label
+                      key={`phase-${row.key}`}
+                      className="flex items-center gap-2 font-mono text-[7.5px] uppercase tracking-wide cursor-pointer hover:text-gray-400"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={renderPhases[row.key]}
+                        onChange={(e) => setRenderPhase(row.key, e.target.checked)}
+                        className="w-3 h-3 appearance-none border border-white checked:bg-white checked:border-white cursor-pointer"
+                      />
+                      {language === "es" ? row.es : row.en}
+                    </label>
+                  ))}
+
+                  <div className="font-mono text-[6.5px] uppercase tracking-wide opacity-50 mt-1">
+                    {language === "es" ? "Reproducción" : "Playback"}
+                  </div>
+                  <label className="flex items-center gap-2 font-mono text-[7.5px] uppercase tracking-wide cursor-pointer hover:text-gray-400">
+                    <input
+                      type="checkbox"
+                      checked={renderPhases.finalCompression}
+                      onChange={(e) => setRenderPhase("finalCompression", e.target.checked)}
+                      className="w-3 h-3 appearance-none border border-white checked:bg-white checked:border-white cursor-pointer"
+                    />
+                    {language === "es" ? "Compresión final" : "Final compression"}
+                  </label>
+
+                  {/* Edge case: no render phases enabled → nothing to play. */}
+                  {!renderPhases.planets && !renderPhases.background && !renderPhases.element && !renderPhases.fmPad && (
+                    <div className="font-mono text-[7px] uppercase tracking-wide text-amber-400/80 italic mt-1">
+                      {language === "es"
+                        ? "Sin fases activas — no hay nada que reproducir"
+                        : "No active phases — nothing to play"}
+                    </div>
+                  )}
+
+                  <div className="border-t border-gray-600 my-1" />
+                  <div className="flex items-center justify-between gap-2 font-mono text-[6.5px] uppercase tracking-wide opacity-70">
+                    <span>
+                      {language === "es" ? "Último render" : "Last render"}
+                      {": "}
+                      {lastRenderMs == null ? "—" : `${Math.round(lastRenderMs)} ms`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        clearOfflinePlaybackCache()
+                        setLastRenderMs(null)
+                      }}
+                      className="border border-white px-2 py-0.5 hover:bg-white hover:text-black transition-colors"
+                    >
+                      {language === "es" ? "Vaciar caché" : "Clear cache"}
+                    </button>
+                  </div>
                 </div>
                   </div>,
                   document.body,
