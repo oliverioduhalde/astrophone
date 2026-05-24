@@ -1105,6 +1105,39 @@ export default function AstrologyCalculator() {
   const [loading, setLoading] = useState(false)
   const [isPreparingPlaybackAudio, setIsPreparingPlaybackAudio] = useState(false)
 
+  // [T-34] Pre-render progress around the Earth glyph (the ⊕ at the
+  // chart center). The actual Web Audio render gives us no progress
+  // events, so we combine a TIME ESTIMATE (climbs 0→90% over ~3s with
+  // ease-out — feels honest for the common case) with an INDETERMINATE
+  // spinner overlay (so the user always sees movement even after the
+  // estimate plateaus at 90%). When isPreparingPlaybackAudio drops
+  // false, we snap to 100% and fade the whole ring out smoothly.
+  const [prepareRingProgress, setPrepareRingProgress] = useState(0)
+  const [prepareRingVisible, setPrepareRingVisible] = useState(false)
+  useEffect(() => {
+    if (isPreparingPlaybackAudio) {
+      setPrepareRingVisible(true)
+      setPrepareRingProgress(0)
+      const startTime = performance.now()
+      const cap = 90
+      const durationMs = 3000
+      let rafId = 0
+      const tick = () => {
+        const elapsed = performance.now() - startTime
+        const t = Math.min(1, elapsed / durationMs)
+        const eased = 1 - Math.pow(1 - t, 3) // ease-out cubic
+        setPrepareRingProgress(eased * cap)
+        if (t < 1) rafId = requestAnimationFrame(tick)
+      }
+      rafId = requestAnimationFrame(tick)
+      return () => cancelAnimationFrame(rafId)
+    }
+    // Render finished: snap to 100% then fade out.
+    setPrepareRingProgress(100)
+    const fadeId = window.setTimeout(() => setPrepareRingVisible(false), 280)
+    return () => clearTimeout(fadeId)
+  }, [isPreparingPlaybackAudio])
+
   const [loopDuration, setLoopDuration] = useState(120)
   const [isLoopRunning, setIsLoopRunning] = useState(false)
   const [pointerRotation, setPointerRotation] = useState(0)
@@ -4873,15 +4906,10 @@ export default function AstrologyCalculator() {
       data-phosphor-theme={themeMotionDataAttr}
     >
       {themeMotionOverlays}
-      {isPreparingPlaybackAudio && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed left-1/2 top-1/2 z-[80] w-[min(70vw,420px)] -translate-x-1/2 -translate-y-1/2"
-          style={contentToneStyle}
-        >
-          <div className="playback-preparing-line" />
-        </div>
-      )}
+      {/* [T-34] The straight playback-preparing-line was removed
+          here — the pre-render feedback now lives as a glowing ring
+          around the Earth glyph (rendered inline with the chart SVG
+          further below). */}
       <div
         className={`relative z-10 mx-auto max-w-[1400px] astro-phosphor-content ${chartScreenPaddingClassName}`}
         style={contentToneStyle}
@@ -6349,6 +6377,59 @@ export default function AstrologyCalculator() {
 
                     {showPointer && (
                       <>
+                        {/* [T-34] Pre-render ring around the Earth
+                            glyph. Sits OUTSIDE the engine-load ring
+                            (ringR = EARTH_RADIUS + 9) so the two
+                            indicators are visually distinct and can
+                            coexist in the rare overlap. Three layers:
+                            faint track + animated progress fill +
+                            an indeterminate spinner arc that keeps
+                            moving even after the estimate plateaus. */}
+                        {prepareRingVisible && (() => {
+                          const ringR = EARTH_RADIUS + 9
+                          const circ = 2 * Math.PI * ringR
+                          const dashOffset = circ * (1 - prepareRingProgress / 100)
+                          const spinnerArc = circ * 0.18
+                          return (
+                            <g
+                              style={{
+                                pointerEvents: "none",
+                                opacity: isPreparingPlaybackAudio ? 1 : 0,
+                                transition: "opacity 250ms ease-out",
+                              }}
+                            >
+                              <circle
+                                cx={EARTH_CENTER_X}
+                                cy={EARTH_CENTER_Y}
+                                r={ringR}
+                                className="crt-prepare-ring-track"
+                              />
+                              <circle
+                                cx={EARTH_CENTER_X}
+                                cy={EARTH_CENTER_Y}
+                                r={ringR}
+                                className="crt-prepare-ring-progress"
+                                strokeDasharray={circ}
+                                strokeDashoffset={dashOffset}
+                                style={{
+                                  transform: "rotate(-90deg)",
+                                  transformOrigin: `${EARTH_CENTER_X}px ${EARTH_CENTER_Y}px`,
+                                }}
+                              />
+                              <circle
+                                cx={EARTH_CENTER_X}
+                                cy={EARTH_CENTER_Y}
+                                r={ringR}
+                                className="crt-prepare-ring-spinner"
+                                strokeDasharray={`${spinnerArc} ${circ - spinnerArc}`}
+                                style={{
+                                  transformOrigin: `${EARTH_CENTER_X}px ${EARTH_CENTER_Y}px`,
+                                }}
+                              />
+                            </g>
+                          )
+                        })()}
+
                         {/* Loading ring around Earth glyph */}
                         {loadingProgress < 100 && (() => {
                           const ringR = EARTH_RADIUS + 5
