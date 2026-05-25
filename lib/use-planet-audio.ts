@@ -1220,7 +1220,13 @@ export function usePlanetAudio(
         const ctx = audioContextRef.current
         if (!ctx) return
 
-        const FADE_OUT_TIME = ORBITAL_STAR_BACKGROUND_FADE_OUT_SEC
+        // [T-37] Fade-out de stop explícito recortado de 10s → 200ms.
+        // El fade largo provocaba overlap del bed viejo con el buffer
+        // nuevo (que ya trae bg adentro), duplicando el fondo durante
+        // los primeros 10s de cada ORBITAL/CHART/CHORD. La constante
+        // ORBITAL_STAR_BACKGROUND_FADE_OUT_SEC se sigue usando para
+        // el fade NATURAL del fin-de-track del buffer interno.
+        const FADE_OUT_TIME = 0.2
         const currentTime = ctx.currentTime
 
         backgroundGainRef.current.gain.setValueAtTime(backgroundGainRef.current.gain.value, currentTime)
@@ -1364,7 +1370,10 @@ export function usePlanetAudio(
     const ctx = audioContextRef.current
     if (!ctx) return
 
-    const FADE_OUT_TIME = 5
+    // [T-37] Idem stopBackgroundSound: 5s → 200ms. Evita que el
+    // element bed viejo se mezcle con el element que el buffer
+    // nuevo trae bakeado durante los primeros 5s.
+    const FADE_OUT_TIME = 0.2
     const currentTime = ctx.currentTime
 
     if (elementBackgroundGainRef.current) {
