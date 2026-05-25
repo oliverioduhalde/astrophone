@@ -5923,70 +5923,41 @@ export default function AstrologyCalculator() {
 
             <div className="mt-4 grid grid-cols-1 gap-1.5 md:mt-8 md:grid-cols-3 md:gap-2">
               {TOP_PANEL_MODE_ORDER.map((mode) => {
+                // [T-39] Form view: un solo botón por modo, sin íconos
+                // ni divisorias. Estructura idéntica a la del chart
+                // Row 1 (label centrada via flex). No hay estado
+                // "playback active" en este vista, solo hover.
                 const modeHoverKey = `subject-mode:${mode}`
-                const playHoverKey = `subject-play:${mode}`
-                const downloadHoverKey = `subject-download:${mode}`
-                const isHovered =
-                  topPanelHoverKey === modeHoverKey ||
-                  topPanelHoverKey === playHoverKey ||
-                  topPanelHoverKey === downloadHoverKey
-                const tooltipText =
-                  topPanelHoverKey === playHoverKey
-                    ? navModeActionLabel[mode]
-                    : topPanelHoverKey === downloadHoverKey
-                      ? TOP_PANEL_DOWNLOAD_TOOLTIP_TEXT
-                      : topPanelHoverKey === modeHoverKey
-                        ? navModeInstructionByMode[mode]
-                        : null
+                const isHovered = topPanelHoverKey === modeHoverKey
+                const tooltipText = isHovered ? navModeInstructionByMode[mode] : null
 
                 return (
                   <div key={`subject-launch-${mode}`} className="relative">
-                    <div
-                      className={`relative flex h-[38px] md:h-[42px] overflow-hidden border transition-colors ${
-                        isHovered ? "border-white bg-white/20 text-white" : "border-white/50 bg-transparent text-white/60"
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => {
+                        showTopPanelHint(modeHoverKey)
+                        void launchModeFromSubject(mode)
+                      }}
+                      onMouseEnter={() => showTopPanelHint(modeHoverKey)}
+                      onFocus={() => showTopPanelHint(modeHoverKey)}
+                      className={`relative flex h-[38px] md:h-[42px] w-full items-center justify-center overflow-hidden border px-1 font-mono font-bold text-[9px] md:text-[12px] leading-none uppercase tracking-[0.1em] md:tracking-[0.12em] transition-colors ${
+                        isHovered
+                          ? "border-white bg-white/20 text-white"
+                          : "border-white/50 bg-transparent text-white/60 hover:bg-white/12"
+                      }`}
+                      title={navModeActionLabel[mode]}
+                    >
+                      <span className="whitespace-nowrap">{navModeHintLabel[mode]}</span>
+                    </button>
+                    <span
+                      className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[160px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
+                        tooltipText ? "opacity-100" : "opacity-0"
                       }`}
                     >
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => {
-                          showTopPanelHint(playHoverKey)
-                          void launchModeFromSubject(mode)
-                        }}
-                        onMouseEnter={() => showTopPanelHint(playHoverKey)}
-                        onFocus={() => showTopPanelHint(playHoverKey)}
-                        className="flex h-full w-[24%] min-w-[28px] items-center justify-center border-r border-white/30 transition-colors hover:bg-white/12"
-                        title={navModeActionLabel[mode]}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                          <path d="M6 4 L16 10 L6 16 Z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => {
-                          showTopPanelHint(modeHoverKey)
-                          void launchModeFromSubject(mode)
-                        }}
-                        onMouseEnter={() => showTopPanelHint(modeHoverKey)}
-                        onFocus={() => showTopPanelHint(modeHoverKey)}
-                        className="flex-1 px-1.5 md:px-2 font-mono font-bold text-[9px] md:text-[12px] leading-none uppercase tracking-[0.1em] md:tracking-[0.12em] transition-colors hover:bg-white/12"
-                      >
-                        {navModeHintLabel[mode]}
-                      </button>
-                      {/* [T-35] Download icon removed from the form view.
-                          Downloads now live exclusively in the playback
-                          toolbar (single ↓ button that expands into the
-                          three Download mode options). */}
-                      <span
-                        className={`pointer-events-none fixed left-1/2 -translate-x-1/2 bottom-[160px] z-[60] inline-block w-fit max-w-[calc(100vw-20px)] whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
-                          tooltipText ? "opacity-100" : "opacity-0"
-                        }`}
-                      >
-                        {tooltipText || ""}
-                      </span>
-                    </div>
+                      {tooltipText || ""}
+                    </span>
                   </div>
                 )
               })}
@@ -7114,39 +7085,17 @@ export default function AstrologyCalculator() {
                           }}
                           onMouseEnter={() => showTopPanelHint(modeHoverKey)}
                           onFocus={() => showTopPanelHint(modeHoverKey)}
-                          className={`relative flex-1 px-1 font-mono font-bold text-[8px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[10px] ${
+                          // [T-39] Sin íconos play/stop. La palabra
+                          // centrada via flex (no más absolute), nunca
+                          // se desborda. El estado activo se indica
+                          // solo con el fondo blanco + texto negro
+                          // heredado del contenedor.
+                          className={`relative flex w-full h-full items-center justify-center px-1 font-mono font-bold text-[8px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[10px] ${
                             isModePlaybackActive ? "text-black" : "hover:bg-white/12 hover:text-white"
                           }`}
                           title={playTooltipText}
                         >
-                          {/* [T-38] Label absolutamente centrada en el
-                              botón (left-1/2 + translate). Hover y
-                              estado activo solo cambian color y fondo,
-                              nunca corren la palabra. */}
-                          <span
-                            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
-                          >
-                            {navModeHintLabel[mode]}
-                          </span>
-                          {/* [T-38] Ícono play/stop SIEMPRE a la derecha
-                              del botón. Más chico que antes (era 28x28
-                              detrás de la palabra) y con la opacidad
-                              levemente subida porque ya no compite
-                              visualmente con el texto. */}
-                          <span
-                            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 opacity-60"
-                            aria-hidden="true"
-                          >
-                            {isModePlaybackActive ? (
-                              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                                <rect x="5" y="5" width="10" height="10" />
-                              </svg>
-                            ) : (
-                              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M6 4 L16 10 L6 16 Z" />
-                              </svg>
-                            )}
-                          </span>
+                          <span className="whitespace-nowrap">{navModeHintLabel[mode]}</span>
                         </button>
                         {/* [T-35] Per-mode download button removed. A
                             single consolidated ↓ in the tools row (below)
