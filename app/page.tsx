@@ -1156,14 +1156,14 @@ export default function AstrologyCalculator() {
 
   const [audioFadeIn, setAudioFadeIn] = useState(5)
   const [audioFadeOut, setAudioFadeOut] = useState(10)
-  const [backgroundVolume, setBackgroundVolume] = useState(2)
+  const [backgroundVolume, setBackgroundVolume] = useState(1)
   const [elementSoundVolume, setElementSoundVolume] = useState(0.5)
   const [dynAspectsFadeIn, setDynAspectsFadeIn] = useState(3)
   const [dynAspectsSustain, setDynAspectsSustain] = useState(2)
   const [dynAspectsFadeOut, setDynAspectsFadeOut] = useState(15)
 
   const [aspectsSoundVolume, setAspectsSoundVolume] = useState(DEFAULT_ASPECTS_SOUND_VOLUME)
-  const [masterVolume, setMasterVolume] = useState(50) // Nuevo estado para controlar volumen maestro (0-100%)
+  const [masterVolume, setMasterVolume] = useState(30) // [T-36] 50→30 — compensa el menor pre-amp del baseGain
   const [reverbMixPercent, setReverbMixPercent] = useState(20)
   const [chordReverbMixPercent, setChordReverbMixPercent] = useState(40)
   const [tuningCents, setTuningCents] = useState(0)

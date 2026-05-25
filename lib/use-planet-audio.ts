@@ -720,8 +720,10 @@ export function usePlanetAudio(
     const vol = envelope.masterVolume !== undefined ? envelope.masterVolume : 20
     masterVolumeRef.current = vol
     if (masterGainNodeRef.current) {
-      // 28 dB base gain (18dB + 10dB) * masterVolume (0-100%)
-      const baseGain = Math.pow(10, 28 / 20) // 28 dB = 25.1x
+      // [T-36] Pre-amp recortado de 28 → 18 dB. Devuelve rango útil a
+      // los faders de bg/element/aspect; el master sube ~10 dB menos
+      // por unidad, así "20%" deja de saturar.
+      const baseGain = Math.pow(10, 18 / 20) // 18 dB ≈ 7.94x
       masterGainNodeRef.current.gain.value = baseGain * (vol / 100)
     }
     if (fmPadGainRef.current?.gain) {
@@ -837,7 +839,7 @@ export function usePlanetAudio(
           resonanceSceneRef.current = new (window as any).ResonanceAudio(audioContextRef.current)
 
           const masterGainNode = audioContextRef.current.createGain()
-          const baseGain = Math.pow(10, 28 / 20) // 28 dB = 25.1x gain (18dB base + 10dB extra)
+          const baseGain = Math.pow(10, 18 / 20) // [T-36] 18 dB ≈ 7.94x (recortado desde 28 dB)
           masterGainNode.gain.value = baseGain * (masterVolumeRef.current / 100)
           masterGainNodeRef.current = masterGainNode
 
@@ -1525,7 +1527,7 @@ export function usePlanetAudio(
         const offlineContext = new OfflineAudioContext(2, totalFrames, sampleRate)
 
         const masterGainNode = offlineContext.createGain()
-        const baseGain = Math.pow(10, 28 / 20)
+        const baseGain = Math.pow(10, 18 / 20) // [T-36] 18 dB pre-amp (recortado desde 28 dB)
         masterGainNode.gain.value = baseGain * Math.max(0, options.masterVolumePercent / 100)
 
         const dynamicsCompressor = offlineContext.createDynamicsCompressor()
@@ -1753,8 +1755,15 @@ export function usePlanetAudio(
         }
 
         // [T-30-b] Per-layer peak normalize, gated by phases.normalizePerLayer.
+        // [T-36] Skip the normalize when the buffer is AMBIENT-ONLY
+        // (no planet events). Otherwise the bg/element peak gets
+        // pushed to -1 dBFS, which made the bg/element faders feel
+        // dead in fm_pad mode and when the user disables the
+        // "planets" phase. With ambient-only buffers we now return
+        // the raw render, letting the faders set the absolute level.
         const renderedSampleBuffer = await offlineContext.startRendering()
-        return phases.normalizePerLayer
+        const shouldNormalize = phases.normalizePerLayer && hasPlanetEvents
+        return shouldNormalize
           ? normalizeBufferPeak(renderedSampleBuffer, -1)
           : renderedSampleBuffer
       } catch (error) {
@@ -2615,7 +2624,7 @@ export function usePlanetAudio(
         const offlineContext = new OfflineAudioContext(2, totalFrames, sampleRate)
 
         const masterGainNode = offlineContext.createGain()
-        const baseGain = Math.pow(10, 28 / 20)
+        const baseGain = Math.pow(10, 18 / 20) // [T-36] 18 dB pre-amp (recortado desde 28 dB)
         masterGainNode.gain.value = baseGain * Math.max(0, options.masterVolumePercent / 100)
 
         const dynamicsCompressor = offlineContext.createDynamicsCompressor()
