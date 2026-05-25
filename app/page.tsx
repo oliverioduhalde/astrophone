@@ -7119,21 +7119,34 @@ export default function AstrologyCalculator() {
                           }`}
                           title={playTooltipText}
                         >
+                          {/* [T-38] Label absolutamente centrada en el
+                              botón (left-1/2 + translate). Hover y
+                              estado activo solo cambian color y fondo,
+                              nunca corren la palabra. */}
                           <span
-                            className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-25"
+                            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
+                          >
+                            {navModeHintLabel[mode]}
+                          </span>
+                          {/* [T-38] Ícono play/stop SIEMPRE a la derecha
+                              del botón. Más chico que antes (era 28x28
+                              detrás de la palabra) y con la opacidad
+                              levemente subida porque ya no compite
+                              visualmente con el texto. */}
+                          <span
+                            className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 opacity-60"
                             aria-hidden="true"
                           >
                             {isModePlaybackActive ? (
-                              <svg width="28" height="28" viewBox="0 0 20 20" fill="currentColor">
+                              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
                                 <rect x="5" y="5" width="10" height="10" />
                               </svg>
                             ) : (
-                              <svg width="28" height="28" viewBox="0 0 20 20" fill="currentColor">
+                              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M6 4 L16 10 L6 16 Z" />
                               </svg>
                             )}
                           </span>
-                          <span className="relative">{navModeHintLabel[mode]}</span>
                         </button>
                         {/* [T-35] Per-mode download button removed. A
                             single consolidated ↓ in the tools row (below)
