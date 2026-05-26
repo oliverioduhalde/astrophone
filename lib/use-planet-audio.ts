@@ -1674,7 +1674,16 @@ export function usePlanetAudio(
         if (effectiveBackground && orbitalStarBackgroundBuffer) {
           const backgroundSource = offlineContext.createBufferSource()
           const backgroundGainNode = offlineContext.createGain()
-          const backgroundTargetGain = Math.max(0, (options.backgroundVolumePercent ?? backgroundVolumeRef.current) / 100)
+          // [T-40] Boost ×5 sobre el slider para que el rango bajo
+          // (1%-5%) sea audible. Con master 30 y pre-amp 18dB el
+          // bg=1 caía a ~-32 dBFS y se perdía. Ahora bg=1 ≈ -18 dBFS,
+          // bg=5 ≈ -5 dBFS. Cap a 1.0 evita clipping en el extremo
+          // alto del slider (que ya no aporta nada audible a partir
+          // de bg=20 porque pega el compresor).
+          const backgroundTargetGain = Math.min(
+            1,
+            Math.max(0, (options.backgroundVolumePercent ?? backgroundVolumeRef.current) / 100) * 5,
+          )
           const backgroundFadeInSec = Math.max(0.01, Math.min(ORBITAL_STAR_BACKGROUND_FADE_IN_SEC, durationSec))
           const backgroundFadeOutSec = Math.max(0.01, Math.min(ORBITAL_STAR_BACKGROUND_FADE_OUT_SEC, durationSec))
           const backgroundFadeOutStart = Math.max(backgroundFadeInSec, durationSec - backgroundFadeOutSec)
@@ -2764,7 +2773,16 @@ export function usePlanetAudio(
         if (options.includeBackground && orbitalStarBackgroundBuffer) {
           const backgroundSource = offlineContext.createBufferSource()
           const backgroundGainNode = offlineContext.createGain()
-          const backgroundTargetGain = Math.max(0, (options.backgroundVolumePercent ?? backgroundVolumeRef.current) / 100)
+          // [T-40] Boost ×5 sobre el slider para que el rango bajo
+          // (1%-5%) sea audible. Con master 30 y pre-amp 18dB el
+          // bg=1 caía a ~-32 dBFS y se perdía. Ahora bg=1 ≈ -18 dBFS,
+          // bg=5 ≈ -5 dBFS. Cap a 1.0 evita clipping en el extremo
+          // alto del slider (que ya no aporta nada audible a partir
+          // de bg=20 porque pega el compresor).
+          const backgroundTargetGain = Math.min(
+            1,
+            Math.max(0, (options.backgroundVolumePercent ?? backgroundVolumeRef.current) / 100) * 5,
+          )
           const backgroundFadeInSec = Math.max(0.01, Math.min(ORBITAL_STAR_BACKGROUND_FADE_IN_SEC, durationSec))
           const backgroundFadeOutSec = Math.max(0.01, Math.min(ORBITAL_STAR_BACKGROUND_FADE_OUT_SEC, durationSec))
           const backgroundFadeOutStart = Math.max(backgroundFadeInSec, durationSec - backgroundFadeOutSec)

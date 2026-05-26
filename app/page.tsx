@@ -7085,17 +7085,32 @@ export default function AstrologyCalculator() {
                           }}
                           onMouseEnter={() => showTopPanelHint(modeHoverKey)}
                           onFocus={() => showTopPanelHint(modeHoverKey)}
-                          // [T-39] Sin íconos play/stop. La palabra
-                          // centrada via flex (no más absolute), nunca
-                          // se desborda. El estado activo se indica
-                          // solo con el fondo blanco + texto negro
-                          // heredado del contenedor.
-                          className={`relative flex w-full h-full items-center justify-center px-1 font-mono font-bold text-[8px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[10px] ${
+                          // [T-40] Label + ▶ como hermanos flex, centrados
+                          // en bloque. Ambos viven en flow normal — no más
+                          // absolute, no se desplazan, no se cortan en
+                          // mobile. text-align center adicional como
+                          // seguro contra hovers que pintan el fondo
+                          // asimétricamente. El ▶ desaparece cuando el
+                          // modo está activo (el fondo blanco ya señala
+                          // el estado de reproducción).
+                          className={`flex h-full w-full items-center justify-center gap-1.5 px-1 text-center font-mono font-bold text-[8px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[10px] ${
                             isModePlaybackActive ? "text-black" : "hover:bg-white/12 hover:text-white"
                           }`}
                           title={playTooltipText}
                         >
                           <span className="whitespace-nowrap">{navModeHintLabel[mode]}</span>
+                          {!isModePlaybackActive && (
+                            <svg
+                              width="10"
+                              height="10"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              className="shrink-0 opacity-80"
+                              aria-hidden="true"
+                            >
+                              <path d="M6 4 L16 10 L6 16 Z" />
+                            </svg>
+                          )}
                         </button>
                         {/* [T-35] Per-mode download button removed. A
                             single consolidated ↓ in the tools row (below)
