@@ -624,15 +624,21 @@ const CHORD_POINTER_FILL_OPACITY = 0.126 // +5%
 const LOADING_SUBTITLE_STEP_MS = 25000
 const MONOTYPE_FONT_STACK = '"Roboto Mono", "Courier New", Courier, monospace'
 const LOADING_INTRO_PARAGRAPHS_BY_LANGUAGE: Record<Language, string[]> = {
+  // [T-42] Cada slide se distribuye en 5 líneas con \n. El <p> que
+  // las renderiza tiene whiteSpace: pre-line + text-center, y el
+  // contenedor flex items-center alinea automáticamente las
+  // flechas < > con la línea 3 (centro vertical del bloque de 5).
+  // Slide 1 (ES y EN): "Johannes Kepler" nombre completo. ES slide
+  // 1: "Armonía" (no "música"). EN slide 3: typo "introducing".
   en: [
-    "ASTRO.LOG.IO is inspired by Kepler’s Harmony of the Spheres.",
-    "This vision of celestial music translates accurate astral data into music.",
-    "By introrducing place and time you may listen and download sonic astrological charts.",
+    "ASTRO.LOG.IO\nis inspired by\nJohannes Kepler’s\nHarmony of the\nSpheres",
+    "This vision\nof celestial music\ntranslates\naccurate astral data\ninto music",
+    "By introducing\nplace and time\nyou may listen\nand download\nsonic astrological charts",
   ],
   es: [
-    "ASTRO.LOG.IO está inspirado en la música de las Esferas de Keppler.",
-    "Esta visión de la música celestial traduce datos astrales precisos en música.",
-    "Introduciendo ubicación y hora podrás escuchar y descargar cartas astrales sonoras.",
+    "ASTRO.LOG.IO\nestá inspirado en\nla Armonía de las Esferas\nde Johannes\nKepler",
+    "Esta visión\nde la música celestial\ntraduce\ndatos astrales precisos\nen música",
+    "Introduciendo\nubicación y hora\npodrás escuchar\ny descargar\ncartas astrales sonoras",
   ],
 }
 const INFO_PARAGRAPHS_BY_LANGUAGE: Record<Language, string[]> = {
