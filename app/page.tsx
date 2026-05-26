@@ -6447,11 +6447,17 @@ export default function AstrologyCalculator() {
                           )
                         })()}
 
-                        {/* Earth center control (single mode trigger) */}
+                        {/* Earth center control (single mode trigger).
+                            [T-47] Fade-out de 2000ms cuando arranca
+                            reproducción (ORBITAL/CHART/CHORD). Vuelve
+                            a aparecer con el mismo fade al parar. */}
                         <g
                           style={{
                             animation: earthCenterThemePulseAnimation,
                             transformOrigin: `${EARTH_CENTER_X}px ${EARTH_CENTER_Y}px`,
+                            opacity: isLoopRunning ? 0 : 1,
+                            transition: "opacity 2000ms ease-out",
+                            pointerEvents: isLoopRunning ? "none" : undefined,
                           }}
                         >
                           <circle
