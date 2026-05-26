@@ -7097,13 +7097,22 @@ export default function AstrologyCalculator() {
                         }`}
                       >
                         <span className="whitespace-nowrap">{navModeHintLabel[mode]}</span>
-                        {!isModePlaybackActive && (
-                          <span className="ml-1.5 inline-flex opacity-80" aria-hidden="true">
-                            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M6 4 L16 10 L6 16 Z" />
-                            </svg>
-                          </span>
-                        )}
+                        {/* [T-45] El ▶ está SIEMPRE en el DOM. Cuando el
+                            modo está activo, se vuelve invisible pero
+                            sigue ocupando espacio. Así el ancho del flex
+                            interno es constante entre idle/active y la
+                            palabra no se "desplaza" al cambiar de estado.
+                            (Lo que el usuario veía no era hover sino el
+                            re-centrado por desaparición del ▶ al hacer
+                            click.) */}
+                        <span
+                          className={`ml-1.5 inline-flex ${isModePlaybackActive ? "invisible" : "opacity-80"}`}
+                          aria-hidden="true"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6 4 L16 10 L6 16 Z" />
+                          </svg>
+                        </span>
                       </button>
                       <span
                         className={`pointer-events-none ${tooltipViewportClass} whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
