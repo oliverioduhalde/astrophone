@@ -624,21 +624,19 @@ const CHORD_POINTER_FILL_OPACITY = 0.126 // +5%
 const LOADING_SUBTITLE_STEP_MS = 25000
 const MONOTYPE_FONT_STACK = '"Roboto Mono", "Courier New", Courier, monospace'
 const LOADING_INTRO_PARAGRAPHS_BY_LANGUAGE: Record<Language, string[]> = {
-  // [T-42] Cada slide se distribuye en 5 líneas con \n. El <p> que
-  // las renderiza tiene whiteSpace: pre-line + text-center, y el
-  // contenedor flex items-center alinea automáticamente las
-  // flechas < > con la línea 3 (centro vertical del bloque de 5).
-  // Slide 1 (ES y EN): "Johannes Kepler" nombre completo. ES slide
-  // 1: "Armonía" (no "música"). EN slide 3: typo "introducing".
+  // [T-43] Distribución en 4 líneas con lógica contextual por
+  // idioma. El <p> renderiza con whiteSpace: pre-line + text-center.
+  // Criterio: cada línea es una unidad de sentido propia
+  // (sujeto / complemento / acción / destino).
   en: [
-    "ASTRO.LOG.IO\nis inspired by\nJohannes Kepler’s\nHarmony of the\nSpheres",
-    "This vision\nof celestial music\ntranslates\naccurate astral data\ninto music",
-    "By introducing\nplace and time\nyou may listen\nand download\nsonic astrological charts",
+    "ASTRO.LOG.IO\nis inspired by\nJohannes Kepler’s\nHarmony of the Spheres",
+    "This vision\nof celestial music\ntranslates accurate astral data\ninto music",
+    "By introducing\nplace and time\nyou may listen and download\nsonic astrological charts",
   ],
   es: [
-    "ASTRO.LOG.IO\nestá inspirado en\nla Armonía de las Esferas\nde Johannes\nKepler",
-    "Esta visión\nde la música celestial\ntraduce\ndatos astrales precisos\nen música",
-    "Introduciendo\nubicación y hora\npodrás escuchar\ny descargar\ncartas astrales sonoras",
+    "ASTRO.LOG.IO\nestá inspirado en\nla Armonía de las Esferas\nde Johannes Kepler",
+    "Esta visión\nde la música celestial\ntraduce datos astrales precisos\nen música",
+    "Introduciendo\nubicación y hora\npodrás escuchar y descargar\ncartas astrales sonoras",
   ],
 }
 const INFO_PARAGRAPHS_BY_LANGUAGE: Record<Language, string[]> = {
