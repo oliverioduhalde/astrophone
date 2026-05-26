@@ -1156,7 +1156,7 @@ export default function AstrologyCalculator() {
 
   const [audioFadeIn, setAudioFadeIn] = useState(5)
   const [audioFadeOut, setAudioFadeOut] = useState(10)
-  const [backgroundVolume, setBackgroundVolume] = useState(1)
+  const [backgroundVolume, setBackgroundVolume] = useState(2)
   const [elementSoundVolume, setElementSoundVolume] = useState(0.5)
   const [dynAspectsFadeIn, setDynAspectsFadeIn] = useState(3)
   const [dynAspectsSustain, setDynAspectsSustain] = useState(2)
@@ -7085,32 +7085,35 @@ export default function AstrologyCalculator() {
                           }}
                           onMouseEnter={() => showTopPanelHint(modeHoverKey)}
                           onFocus={() => showTopPanelHint(modeHoverKey)}
-                          // [T-40] Label + ▶ como hermanos flex, centrados
-                          // en bloque. Ambos viven en flow normal — no más
-                          // absolute, no se desplazan, no se cortan en
-                          // mobile. text-align center adicional como
-                          // seguro contra hovers que pintan el fondo
-                          // asimétricamente. El ▶ desaparece cuando el
-                          // modo está activo (el fondo blanco ya señala
-                          // el estado de reproducción).
-                          className={`flex h-full w-full items-center justify-center gap-1.5 px-1 text-center font-mono font-bold text-[8px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[10px] ${
+                          // [T-41] Grid de 3 columnas (1fr | auto | 1fr)
+                          // para BLOQUEAR la posición de la palabra.
+                          // La columna 1 es un spacer vacío, la 2 lleva
+                          // el label (auto-sized), la 3 lleva el ▶ con
+                          // justify-self-end. Cuando el ▶ se oculta en
+                          // el estado activo, la columna 3 SIGUE
+                          // ocupando 1fr — entonces la palabra no se
+                          // mueve nunca. Cualquier hover/active queda
+                          // solo como cambio de color o de fondo.
+                          className={`grid h-full w-full grid-cols-[1fr_auto_1fr] items-center px-1 font-mono font-bold text-[8px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[10px] ${
                             isModePlaybackActive ? "text-black" : "hover:bg-white/12 hover:text-white"
                           }`}
                           title={playTooltipText}
                         >
+                          <span aria-hidden="true" />
                           <span className="whitespace-nowrap">{navModeHintLabel[mode]}</span>
-                          {!isModePlaybackActive && (
-                            <svg
-                              width="10"
-                              height="10"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                              className="shrink-0 opacity-80"
-                              aria-hidden="true"
-                            >
-                              <path d="M6 4 L16 10 L6 16 Z" />
-                            </svg>
-                          )}
+                          <span className="justify-self-end pr-1" aria-hidden="true">
+                            {!isModePlaybackActive && (
+                              <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                                className="opacity-80"
+                              >
+                                <path d="M6 4 L16 10 L6 16 Z" />
+                              </svg>
+                            )}
+                          </span>
                         </button>
                         {/* [T-35] Per-mode download button removed. A
                             single consolidated ↓ in the tools row (below)
