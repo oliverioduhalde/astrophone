@@ -1345,7 +1345,7 @@ export default function AstrologyCalculator() {
             manual: "MANUAL",
             hereNow: "AQUI Y AHORA",
             dateTimePlaceInput: "INPUT DATE & PLACE",
-            dataInput: "NUEVO INGRESO DE DATOS",
+            dataInput: "NUEVA CARTA",
             dateTime: "Fecha y Hora",
             location: "Ubicacion",
             latitude: "Latitud",
@@ -1432,7 +1432,7 @@ export default function AstrologyCalculator() {
             manual: "MANUAL",
             hereNow: "HERE & NOW",
             dateTimePlaceInput: "INPUT DATE & PLACE",
-            dataInput: "NEW DATA INPUT",
+            dataInput: "NEW CHART",
             dateTime: "Date & Time",
             location: "Location",
             latitude: "Latitude",
@@ -7088,7 +7088,7 @@ export default function AstrologyCalculator() {
                         onMouseEnter={() => showTopPanelHint(modeHoverKey)}
                         onFocus={() => showTopPanelHint(modeHoverKey)}
                         title={playTooltipText}
-                        className={`relative flex h-[40px] md:h-[48px] w-full items-center justify-center overflow-hidden border px-1 font-mono font-bold text-[8px] md:text-[10px] leading-none uppercase tracking-[0.1em] transition-colors ${
+                        className={`relative flex h-[32px] md:h-[38px] w-full items-center justify-center overflow-hidden border px-1 font-mono font-bold text-[8px] md:text-[10px] leading-none uppercase tracking-[0.1em] transition-colors ${
                           isModePlaybackActive
                             ? "border-white bg-white/80 text-black"
                             : isModeHovering
@@ -7126,8 +7126,11 @@ export default function AstrologyCalculator() {
                 })}
               </div>
 
-              {/* Row 2 — Tools (small, 4 cols) */}
-              <div className="grid grid-cols-5 gap-1 md:gap-1.5 pointer-events-auto">
+              {/* [T-46] Row 2 — Tools (compactado a h-32/h-38, 6 cols
+                  para integrar NEW CHART al final). Se eliminó la
+                  ex-Row 3 (botón ancho de NEW DATA INPUT) para ganar
+                  área de chart. */}
+              <div className="grid grid-cols-6 gap-1 md:gap-1.5 pointer-events-auto">
                 <div className="relative">
                   <button
                     ref={(node) => {
@@ -7137,7 +7140,7 @@ export default function AstrologyCalculator() {
                     onClick={() => setMenuOpen((prev) => !prev)}
                     onMouseEnter={() => showTopPanelHint("menu")}
                     onFocus={() => showTopPanelHint("menu")}
-                    className={`flex h-[40px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[48px] ${
+                    className={`flex h-[32px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[38px] ${
                       menuOpen
                         ? "border-white/80 bg-white/20 text-white"
                         : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
@@ -7164,7 +7167,7 @@ export default function AstrologyCalculator() {
                     onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
                     onFocus={() => setTopPanelHoverKey("reset:info")}
                     onBlur={() => setTopPanelHoverKey((current) => (current === "reset:info" ? null : current))}
-                    className={`h-[40px] w-full border px-1 py-0 font-mono text-[7px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[48px] md:text-[9px] ${
+                    className={`h-[32px] w-full border px-1 py-0 font-mono text-[7px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[38px] md:text-[9px] ${
                       topPanelHoverKey === "reset:info"
                         ? "border-white/80 bg-white/20 text-white"
                         : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
@@ -7180,7 +7183,7 @@ export default function AstrologyCalculator() {
                     onMouseLeave={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
                     onFocus={() => setTopPanelHoverKey("reset:main")}
                     onBlur={() => setTopPanelHoverKey((current) => (current === "reset:main" ? null : current))}
-                    className={`h-[40px] w-full border px-1 py-0 font-mono text-[7px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[48px] md:text-[9px] ${
+                    className={`h-[32px] w-full border px-1 py-0 font-mono text-[7px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[38px] md:text-[9px] ${
                       topPanelHoverKey === "reset:main"
                         ? "border-white/80 bg-white/20 text-white"
                         : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
@@ -7198,7 +7201,7 @@ export default function AstrologyCalculator() {
                     onMouseEnter={() => showTopPanelHint("photo:single")}
                     onFocus={() => showTopPanelHint("photo:single")}
                     disabled={!horoscopeData || isExportingJpg}
-                    className={`flex h-[40px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[48px] ${
+                    className={`flex h-[32px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[38px] ${
                       !horoscopeData || isExportingJpg
                         ? "border-white/20 bg-transparent text-white/20 cursor-not-allowed"
                         : topPanelHoverKey === "photo:single"
@@ -7244,7 +7247,7 @@ export default function AstrologyCalculator() {
                     onMouseEnter={() => showTopPanelHint("download:menu")}
                     onFocus={() => showTopPanelHint("download:menu")}
                     disabled={!horoscopeData}
-                    className={`relative flex h-[40px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[48px] ${
+                    className={`relative flex h-[32px] w-full items-center justify-center border px-1 py-0 transition-colors md:h-[38px] ${
                       !horoscopeData
                         ? "border-white/20 bg-transparent text-white/20 cursor-not-allowed"
                         : downloadMenuOpen
@@ -7321,21 +7324,36 @@ export default function AstrologyCalculator() {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Row 3 — Data Input (full width) */}
-              <div className="pointer-events-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    stopCurrentPerformance()
-                    setShowSubject(true)
-                    setMenuOpen(false)
-                  }}
-                  className="h-[40px] w-full border border-white/60 bg-transparent px-2 py-0 font-mono text-[9px] font-bold uppercase tracking-[0.18em] leading-none text-white transition-colors hover:border-white hover:bg-white/20 md:h-[48px] md:text-[11px]"
-                >
-                  {ui.dataInput}
-                </button>
+                {/* [T-46] NEW CHART integrado como 6ta columna (era
+                    el Row 3 standalone). Vuelve al form para
+                    reingreso de datos, comportamiento idéntico al
+                    botón viejo. */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopCurrentPerformance()
+                      setShowSubject(true)
+                      setMenuOpen(false)
+                    }}
+                    onMouseEnter={() => setTopPanelHoverKey("new-chart")}
+                    onMouseLeave={() =>
+                      setTopPanelHoverKey((current) => (current === "new-chart" ? null : current))
+                    }
+                    onFocus={() => setTopPanelHoverKey("new-chart")}
+                    onBlur={() =>
+                      setTopPanelHoverKey((current) => (current === "new-chart" ? null : current))
+                    }
+                    className={`h-[32px] w-full border px-1 py-0 font-mono text-[7px] font-bold leading-none uppercase tracking-[0.11em] transition-colors md:h-[38px] md:text-[9px] ${
+                      topPanelHoverKey === "new-chart"
+                        ? "border-white/80 bg-white/20 text-white"
+                        : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
+                    }`}
+                  >
+                    {ui.dataInput}
+                  </button>
+                </div>
               </div>
               {isExportingMp3 && (
                 <div className="mt-1.5 text-center font-mono text-[7px] md:text-[11px] uppercase tracking-wide text-white/70">
