@@ -7063,74 +7063,55 @@ export default function AstrologyCalculator() {
 
                   return (
                     <div key={`top-nav-${mode}`} className="relative">
-                      <div
-                        className={`relative flex h-[40px] overflow-hidden border transition-colors md:h-[48px] ${
+                      {/* [T-44] Estructura aplanada: un solo <button>
+                          que carga todo el estado visual (idle / hover
+                          / active). El form view tiene exactamente
+                          este patrón y nunca shifta la letra — al
+                          colapsar el anidamiento desaparece el
+                          double transition-colors + grid auto col
+                          que provocaba el "salto" sub-píxel. */}
+                      <button
+                        onClick={() => {
+                          showTopPanelHint(modeHoverKey)
+                          if (isModePlaybackActive) {
+                            stopCurrentPerformance()
+                            return
+                          }
+                          setNavigationMode(mode)
+                          if (horoscopeData) {
+                            startNavigationMode(mode)
+                          } else {
+                            setShowSubject(true)
+                            void launchModeFromSubject(mode)
+                          }
+                        }}
+                        onMouseEnter={() => showTopPanelHint(modeHoverKey)}
+                        onFocus={() => showTopPanelHint(modeHoverKey)}
+                        title={playTooltipText}
+                        className={`relative flex h-[40px] md:h-[48px] w-full items-center justify-center overflow-hidden border px-1 font-mono font-bold text-[8px] md:text-[10px] leading-none uppercase tracking-[0.1em] transition-colors ${
                           isModePlaybackActive
                             ? "border-white bg-white/80 text-black"
                             : isModeHovering
                               ? "border-white/80 bg-white/20 text-white"
-                              : "border-white/50 bg-transparent text-white/80"
+                              : "border-white/50 bg-transparent text-white/80 hover:border-white/80 hover:bg-white/20 hover:text-white"
                         }`}
                       >
-                        <button
-                          onClick={() => {
-                            showTopPanelHint(modeHoverKey)
-                            if (isModePlaybackActive) {
-                              stopCurrentPerformance()
-                              return
-                            }
-                            setNavigationMode(mode)
-                            if (horoscopeData) {
-                              startNavigationMode(mode)
-                            } else {
-                              setShowSubject(true)
-                              void launchModeFromSubject(mode)
-                            }
-                          }}
-                          onMouseEnter={() => showTopPanelHint(modeHoverKey)}
-                          onFocus={() => showTopPanelHint(modeHoverKey)}
-                          // [T-41] Grid de 3 columnas (1fr | auto | 1fr)
-                          // para BLOQUEAR la posición de la palabra.
-                          // La columna 1 es un spacer vacío, la 2 lleva
-                          // el label (auto-sized), la 3 lleva el ▶ con
-                          // justify-self-end. Cuando el ▶ se oculta en
-                          // el estado activo, la columna 3 SIGUE
-                          // ocupando 1fr — entonces la palabra no se
-                          // mueve nunca. Cualquier hover/active queda
-                          // solo como cambio de color o de fondo.
-                          className={`grid h-full w-full grid-cols-[1fr_auto_1fr] items-center px-1 font-mono font-bold text-[8px] leading-none uppercase tracking-[0.1em] transition-colors md:text-[10px] ${
-                            isModePlaybackActive ? "text-black" : "hover:bg-white/12 hover:text-white"
-                          }`}
-                          title={playTooltipText}
-                        >
-                          <span aria-hidden="true" />
-                          <span className="whitespace-nowrap">{navModeHintLabel[mode]}</span>
-                          <span className="justify-self-end pr-1" aria-hidden="true">
-                            {!isModePlaybackActive && (
-                              <svg
-                                width="10"
-                                height="10"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                                className="opacity-80"
-                              >
-                                <path d="M6 4 L16 10 L6 16 Z" />
-                              </svg>
-                            )}
+                        <span className="whitespace-nowrap">{navModeHintLabel[mode]}</span>
+                        {!isModePlaybackActive && (
+                          <span className="ml-1.5 inline-flex opacity-80" aria-hidden="true">
+                            <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M6 4 L16 10 L6 16 Z" />
+                            </svg>
                           </span>
-                        </button>
-                        {/* [T-35] Per-mode download button removed. A
-                            single consolidated ↓ in the tools row (below)
-                            now opens a popover with the three options
-                            ("Download ORBITAL/CHART/CHORD Audio"). */}
-                        <span
-                          className={`pointer-events-none ${tooltipViewportClass} whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
-                            tooltipText ? "opacity-100" : "opacity-0"
-                          }`}
-                        >
-                          {tooltipText || ""}
-                        </span>
-                      </div>
+                        )}
+                      </button>
+                      <span
+                        className={`pointer-events-none ${tooltipViewportClass} whitespace-normal md:whitespace-nowrap crt-tooltip px-1.5 md:px-3 py-1.5 md:py-2 text-left font-mono text-[7px] md:text-[16px] normal-case leading-tight text-white transition-opacity duration-500 ${
+                          tooltipText ? "opacity-100" : "opacity-0"
+                        }`}
+                      >
+                        {tooltipText || ""}
+                      </span>
                     </div>
                   )
                 })}
