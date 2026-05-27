@@ -6450,7 +6450,11 @@ export default function AstrologyCalculator() {
                         {/* Earth center control (single mode trigger).
                             [T-47] Fade-out de 2000ms cuando arranca
                             reproducción (ORBITAL/CHART/CHORD). Vuelve
-                            a aparecer con el mismo fade al parar. */}
+                            a aparecer con el mismo fade al parar.
+                            [T-48] isolation:isolate + willChange:opacity
+                            fuerzan stacking context propio + compositor
+                            layer, así la opacity transition se aplica
+                            por encima del mix-blend-mode del hijo. */}
                         <g
                           style={{
                             animation: earthCenterThemePulseAnimation,
@@ -6458,6 +6462,8 @@ export default function AstrologyCalculator() {
                             opacity: isLoopRunning ? 0 : 1,
                             transition: "opacity 2000ms ease-out",
                             pointerEvents: isLoopRunning ? "none" : undefined,
+                            isolation: "isolate",
+                            willChange: "opacity",
                           }}
                         >
                           <circle
@@ -6474,7 +6480,12 @@ export default function AstrologyCalculator() {
                               pointerEvents: "none",
                               filter: earthCenterGlyphHaloFilter,
                               animation: earthCenterGlyphGlowAnimation,
-                              mixBlendMode: "screen",
+                              // [T-48] mix-blend-mode "screen" combinado con
+                              // la opacity transition del padre dejaba la
+                              // capa visible en Chrome. Lo desactivamos
+                              // durante reproducción para que el fade del
+                              // padre se aplique sin interferencia.
+                              mixBlendMode: isLoopRunning ? "normal" : "screen",
                               opacity: isLoopRunning ? 0.94 : 0.86,
                             }}
                           >
