@@ -5047,15 +5047,16 @@ export default function AstrologyCalculator() {
   // Planet detection is handled inside the active navigation scheduler.
 
   if (showLoadingIntroScreen) {
-    // [T-54] Instalación: el texto completo (sin paginar) trazado SOBRE la
-    // curva del círculo — poesía tipográfica, no un bloque de texto metido
-    // adentro. Cada párrafo es un anillo que sigue exactamente los mismos
-    // tres radios que va a tener la carta astrológica más abajo (r=180
-    // zodiaco, r=146 casas, r=114 interior — ver el <svg ref={chartSvgRef}>
-    // y sus <circle r="180"/"146"/"114">). El círculo — y ahora los tres
-    // anillos — son la constante visual de toda la instalación: acá los
-    // llena texto, después los llenan signos/casas/planetas.
-    const introRingTexts = loadingIntroParagraphs.map((p) => p.replace(/\n/g, "   ·   "))
+    // [T-55] Instalación: un solo anillo con todo el texto junto, girando
+    // muy lento en sentido horario — arriba del círculo el texto se mueve
+    // de izquierda a derecha, al ritmo en que se lee. Mismo r=180 que el
+    // zodiaco de la carta astrológica más abajo (ver el <svg
+    // ref={chartSvgRef}> y su <circle r="180">) — el círculo sigue siendo
+    // la constante visual de toda la instalación.
+    const introRingText = loadingIntroParagraphs.map((p) => p.replace(/\n/g, "   ·   ")).join("   ·   ")
+    // Una vuelta completa cada 90s: lento a propósito, pensado para
+    // leerse cómodo mientras gira, no para "esperar" a que termine.
+    const INTRO_RING_ROTATION_SECONDS = 90
 
     return (
       <main
@@ -5105,41 +5106,32 @@ export default function AstrologyCalculator() {
             >
               <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full loading-intro-fade-in">
                 <defs>
-                  {/* Mismos r que components/astro-chart.tsx (zodiaco/casas)
-                      y el <svg ref={chartSvgRef}> de la carta: 180/146/114.
+                  {/* Mismo r=180 que el zodiaco de la carta astrológica.
                       Path partido en dos semicírculos (patrón estándar para
                       textPath sobre una circunferencia completa), empieza
-                      arriba (12h) y corre en sentido horario. */}
-                  <path id="introRingPathOuter" d="M 200 20 A 180 180 0 1 1 200 380 A 180 180 0 1 1 200 20" fill="none" />
-                  <path id="introRingPathMid" d="M 200 54 A 146 146 0 1 1 200 346 A 146 146 0 1 1 200 54" fill="none" />
-                  <path id="introRingPathInner" d="M 200 86 A 114 114 0 1 1 200 314 A 114 114 0 1 1 200 86" fill="none" />
+                      arriba (12h). */}
+                  <path id="introRingPath" d="M 200 20 A 180 180 0 1 1 200 380 A 180 180 0 1 1 200 20" fill="none" />
                 </defs>
 
-                <circle cx="200" cy="200" r="180" fill="none" stroke="white" strokeOpacity="0.15" strokeWidth="1" />
-                <circle cx="200" cy="200" r="146" fill="none" stroke="white" strokeOpacity="0.15" strokeWidth="1" />
-                <circle cx="200" cy="200" r="114" fill="none" stroke="white" strokeOpacity="0.15" strokeWidth="1" />
+                <circle cx="200" cy="200" r="180" fill="none" stroke="white" strokeOpacity="0.18" strokeWidth="1" />
 
-                {introRingTexts[0] && (
-                  <text className="font-mono uppercase" fontSize="7.6" letterSpacing="0.4" fill="rgba(255,255,255,0.78)">
-                    <textPath href="#introRingPathOuter" startOffset="0">
-                      {introRingTexts[0]}
+                {/* Gira en sentido horario: arriba del círculo el texto se
+                    ve moverse de izquierda a derecha, como al leer. */}
+                <g>
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="0 200 200"
+                    to="360 200 200"
+                    dur={`${INTRO_RING_ROTATION_SECONDS}s`}
+                    repeatCount="indefinite"
+                  />
+                  <text className="font-mono uppercase" fontSize="5.4" letterSpacing="0.1" fill="rgba(255,255,255,0.78)">
+                    <textPath href="#introRingPath" startOffset="0">
+                      {introRingText}
                     </textPath>
                   </text>
-                )}
-                {introRingTexts[1] && (
-                  <text className="font-mono uppercase" fontSize="7" letterSpacing="0.3" fill="rgba(255,255,255,0.7)">
-                    <textPath href="#introRingPathMid" startOffset="0">
-                      {introRingTexts[1]}
-                    </textPath>
-                  </text>
-                )}
-                {introRingTexts[2] && (
-                  <text className="font-mono uppercase" fontSize="6.4" letterSpacing="0.2" fill="rgba(255,255,255,0.62)">
-                    <textPath href="#introRingPathInner" startOffset="0">
-                      {introRingTexts[2]}
-                    </textPath>
-                  </text>
-                )}
+                </g>
               </svg>
             </div>
 
