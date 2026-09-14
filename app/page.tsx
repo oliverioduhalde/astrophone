@@ -5098,36 +5098,76 @@ export default function AstrologyCalculator() {
                     arriba (12h). */}
                 <path id="introRingPath" d="M 200 20 A 180 180 0 1 1 200 380 A 180 180 0 1 1 200 20" fill="none" />
 
-                {/* Gradiente vertical fijo (arriba brillante, abajo apagado)
-                    aplicado como mask sobre el grupo que rota: al ser un
-                    mask, sus coordenadas quedan fijas en pantalla aunque
-                    el contenido que enmascara gire — el brillo no
-                    acompaña al texto, se queda siempre arriba. */}
-                <linearGradient id="introRingFade" x1="0" y1="0" x2="0" y2="1">
+                {/* Dos gradientes verticales fijos en pantalla que se
+                    cruzan: la capa nítida domina arriba y se apaga hacia
+                    abajo, la capa borrosa aparece recién a partir de la
+                    mitad y domina abajo. IMPORTANTE: el mask va en el <g>
+                    DE AFUERA, que no rota — si el mask fuera del mismo
+                    <g> que tiene el animateTransform, sus coordenadas
+                    rotarían junto con el texto (así estaba antes, era el
+                    bug: el brillo giraba en vez de quedarse arriba). */}
+                <linearGradient id="introRingFadeSharp" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="white" stopOpacity="1" />
-                  <stop offset="45%" stopColor="white" stopOpacity="0.55" />
-                  <stop offset="100%" stopColor="white" stopOpacity="0.08" />
+                  <stop offset="35%" stopColor="white" stopOpacity="0.75" />
+                  <stop offset="55%" stopColor="white" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="white" stopOpacity="0" />
                 </linearGradient>
-                <mask id="introRingFadeMask" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="400">
-                  <rect x="0" y="0" width="400" height="400" fill="url(#introRingFade)" />
+                <linearGradient id="introRingFadeBlur" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="white" stopOpacity="0" />
+                  <stop offset="35%" stopColor="white" stopOpacity="0" />
+                  <stop offset="55%" stopColor="white" stopOpacity="0.22" />
+                  <stop offset="100%" stopColor="white" stopOpacity="0.4" />
+                </linearGradient>
+                <mask id="introRingMaskSharp" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="400">
+                  <rect x="0" y="0" width="400" height="400" fill="url(#introRingFadeSharp)" />
                 </mask>
+                <mask id="introRingMaskBlur" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="400">
+                  <rect x="0" y="0" width="400" height="400" fill="url(#introRingFadeBlur)" />
+                </mask>
+                <filter id="introRingBlurFilter" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1.7" />
+                </filter>
               </defs>
 
-              {/* Gira en sentido antihorario. */}
-              <g mask="url(#introRingFadeMask)">
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="360 200 200"
-                  to="0 200 200"
-                  dur={`${INTRO_RING_ROTATION_SECONDS}s`}
-                  repeatCount="indefinite"
-                />
-                <text className="font-mono uppercase" fontSize="6.4" letterSpacing="0.1" fill="white">
-                  <textPath href="#introRingPath" startOffset="0">
-                    {introRingText}
-                  </textPath>
-                </text>
+              {/* Capa borrosa, solo visible de la mitad para abajo. */}
+              <g mask="url(#introRingMaskBlur)">
+                <g filter="url(#introRingBlurFilter)">
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="360 200 200"
+                    to="0 200 200"
+                    dur={`${INTRO_RING_ROTATION_SECONDS}s`}
+                    repeatCount="indefinite"
+                  />
+                  <text className="font-mono uppercase" fontSize="6.4" letterSpacing="0.1" fill="white">
+                    <textPath href="#introRingPath" startOffset="0">
+                      {introRingText}
+                    </textPath>
+                  </text>
+                </g>
+              </g>
+
+              {/* Capa nítida, arriba — el "punto de lectura" fijo. Gira en
+                  sentido antihorario, igual que la capa borrosa (mismos
+                  parámetros de animateTransform, arrancan juntas → quedan
+                  sincronizadas). */}
+              <g mask="url(#introRingMaskSharp)">
+                <g>
+                  <animateTransform
+                    attributeName="transform"
+                    type="rotate"
+                    from="360 200 200"
+                    to="0 200 200"
+                    dur={`${INTRO_RING_ROTATION_SECONDS}s`}
+                    repeatCount="indefinite"
+                  />
+                  <text className="font-mono uppercase" fontSize="6.4" letterSpacing="0.1" fill="white">
+                    <textPath href="#introRingPath" startOffset="0">
+                      {introRingText}
+                    </textPath>
+                  </text>
+                </g>
               </g>
             </svg>
           </div>
