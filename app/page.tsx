@@ -5047,13 +5047,15 @@ export default function AstrologyCalculator() {
   // Planet detection is handled inside the active navigation scheduler.
 
   if (showLoadingIntroScreen) {
-    // [T-53] Instalación: el texto completo (sin paginar) puesto dentro de
-    // un círculo con la misma geometría que la carta astrológica
-    // (viewBox 400×400, cx=200 cy=200 r=180 — ver components/astro-chart.tsx
-    // y el <svg ref={chartSvgRef}> más abajo) para que sea el MISMO círculo
-    // que después se llena de planetas: el círculo es la constante visual
-    // de toda la instalación, solo cambia lo que contiene.
-    const fullIntroText = loadingIntroParagraphs.join("\n\n")
+    // [T-54] Instalación: el texto completo (sin paginar) trazado SOBRE la
+    // curva del círculo — poesía tipográfica, no un bloque de texto metido
+    // adentro. Cada párrafo es un anillo que sigue exactamente los mismos
+    // tres radios que va a tener la carta astrológica más abajo (r=180
+    // zodiaco, r=146 casas, r=114 interior — ver el <svg ref={chartSvgRef}>
+    // y sus <circle r="180"/"146"/"114">). El círculo — y ahora los tres
+    // anillos — son la constante visual de toda la instalación: acá los
+    // llena texto, después los llenan signos/casas/planetas.
+    const introRingTexts = loadingIntroParagraphs.map((p) => p.replace(/\n/g, "   ·   "))
 
     return (
       <main
@@ -5101,20 +5103,44 @@ export default function AstrologyCalculator() {
                 if (e.key === "Enter" || e.key === " ") skipLoadingIntro()
               }}
             >
-              <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full" aria-hidden="true">
-                <circle cx="200" cy="200" r="180" fill="none" stroke="white" strokeOpacity="0.3" strokeWidth="1" />
+              <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full loading-intro-fade-in">
+                <defs>
+                  {/* Mismos r que components/astro-chart.tsx (zodiaco/casas)
+                      y el <svg ref={chartSvgRef}> de la carta: 180/146/114.
+                      Path partido en dos semicírculos (patrón estándar para
+                      textPath sobre una circunferencia completa), empieza
+                      arriba (12h) y corre en sentido horario. */}
+                  <path id="introRingPathOuter" d="M 200 20 A 180 180 0 1 1 200 380 A 180 180 0 1 1 200 20" fill="none" />
+                  <path id="introRingPathMid" d="M 200 54 A 146 146 0 1 1 200 346 A 146 146 0 1 1 200 54" fill="none" />
+                  <path id="introRingPathInner" d="M 200 86 A 114 114 0 1 1 200 314 A 114 114 0 1 1 200 86" fill="none" />
+                </defs>
+
+                <circle cx="200" cy="200" r="180" fill="none" stroke="white" strokeOpacity="0.15" strokeWidth="1" />
+                <circle cx="200" cy="200" r="146" fill="none" stroke="white" strokeOpacity="0.15" strokeWidth="1" />
+                <circle cx="200" cy="200" r="114" fill="none" stroke="white" strokeOpacity="0.15" strokeWidth="1" />
+
+                {introRingTexts[0] && (
+                  <text className="font-mono uppercase" fontSize="7.6" letterSpacing="0.4" fill="rgba(255,255,255,0.78)">
+                    <textPath href="#introRingPathOuter" startOffset="0">
+                      {introRingTexts[0]}
+                    </textPath>
+                  </text>
+                )}
+                {introRingTexts[1] && (
+                  <text className="font-mono uppercase" fontSize="7" letterSpacing="0.3" fill="rgba(255,255,255,0.7)">
+                    <textPath href="#introRingPathMid" startOffset="0">
+                      {introRingTexts[1]}
+                    </textPath>
+                  </text>
+                )}
+                {introRingTexts[2] && (
+                  <text className="font-mono uppercase" fontSize="6.4" letterSpacing="0.2" fill="rgba(255,255,255,0.62)">
+                    <textPath href="#introRingPathInner" startOffset="0">
+                      {introRingTexts[2]}
+                    </textPath>
+                  </text>
+                )}
               </svg>
-              <div className="absolute inset-0 flex items-center justify-center p-[19%] md:p-[17%]">
-                <p
-                  className="loading-intro-fade-in font-mono text-center leading-[1.5] text-[9px] md:text-[15px]"
-                  style={{
-                    color: "rgba(255,255,255,0.75)",
-                    whiteSpace: "pre-line",
-                  }}
-                >
-                  {fullIntroText}
-                </p>
-              </div>
             </div>
 
             <div className="mt-4 flex items-center justify-between px-1">
