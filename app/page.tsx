@@ -5108,14 +5108,14 @@ export default function AstrologyCalculator() {
                     bug: el brillo giraba en vez de quedarse arriba). */}
                 <linearGradient id="introRingFadeSharp" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="white" stopOpacity="1" />
-                  <stop offset="35%" stopColor="white" stopOpacity="0.75" />
-                  <stop offset="55%" stopColor="white" stopOpacity="0.12" />
+                  <stop offset="16%" stopColor="white" stopOpacity="0.7" />
+                  <stop offset="30%" stopColor="white" stopOpacity="0.1" />
                   <stop offset="100%" stopColor="white" stopOpacity="0" />
                 </linearGradient>
                 <linearGradient id="introRingFadeBlur" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="white" stopOpacity="0" />
-                  <stop offset="35%" stopColor="white" stopOpacity="0" />
-                  <stop offset="55%" stopColor="white" stopOpacity="0.22" />
+                  <stop offset="16%" stopColor="white" stopOpacity="0" />
+                  <stop offset="30%" stopColor="white" stopOpacity="0.22" />
                   <stop offset="100%" stopColor="white" stopOpacity="0.4" />
                 </linearGradient>
                 <mask id="introRingMaskSharp" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="400">
@@ -5140,7 +5140,7 @@ export default function AstrologyCalculator() {
                     dur={`${INTRO_RING_ROTATION_SECONDS}s`}
                     repeatCount="indefinite"
                   />
-                  <text className="font-mono uppercase" fontSize="8.32" letterSpacing="0.1" fill="white">
+                  <text className="font-mono uppercase" fontSize="6.4" letterSpacing="0.1" fill="white">
                     <textPath href="#introRingPath" startOffset="0">
                       {introRingText}
                     </textPath>
@@ -5162,7 +5162,7 @@ export default function AstrologyCalculator() {
                     dur={`${INTRO_RING_ROTATION_SECONDS}s`}
                     repeatCount="indefinite"
                   />
-                  <text className="font-mono uppercase" fontSize="8.32" letterSpacing="0.1" fill="white">
+                  <text className="font-mono uppercase" fontSize="6.4" letterSpacing="0.1" fill="white">
                     <textPath href="#introRingPath" startOffset="0">
                       {introRingText}
                     </textPath>
