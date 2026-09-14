@@ -5065,7 +5065,44 @@ export default function AstrologyCalculator() {
     // slide viejo — se unen con un espacio para que lean como una sola
     // oración. El separador " · " queda reservado para las unidades de
     // sentido reales: entre un párrafo y el siguiente.
-    const introRingText = loadingIntroParagraphs.map((p) => p.replace(/\n/g, " ")).join("      ·      ")
+    //
+    // [T-65] Versales góticas: la primera letra de cada oración/párrafo
+    // se renderiza mucho más grande que el cuerpo (como en un manuscrito
+    // iluminado). Además, "ASTRO.LOG.IO" (el título, primer párrafo) va
+    // completo en bold — no solo su primera letra.
+    type RingSegment = { text: string; versal?: boolean; bold?: boolean }
+    const RING_SEPARATOR = "      ·      "
+    const buildParagraphSegments = (text: string, isTitleParagraph: boolean): RingSegment[] => {
+      if (isTitleParagraph) {
+        const match = text.match(/^(\S+)(\s.*)?$/s)
+        const title = match ? match[1] : text
+        const rest = match?.[2] ?? ""
+        const segments: RingSegment[] = [{ text: title.charAt(0), versal: true, bold: true }]
+        if (title.length > 1) segments.push({ text: title.slice(1), bold: true })
+        if (rest) segments.push({ text: rest })
+        return segments
+      }
+      const segments: RingSegment[] = [{ text: text.charAt(0), versal: true }]
+      if (text.length > 1) segments.push({ text: text.slice(1) })
+      return segments
+    }
+    const introRingSegments: RingSegment[] = loadingIntroParagraphs.flatMap((p, i) => {
+      const segs = buildParagraphSegments(p.replace(/\n/g, " "), i === 0)
+      if (i < loadingIntroParagraphs.length - 1) segs.push({ text: RING_SEPARATOR })
+      return segs
+    })
+    const INTRO_RING_BASE_FONT_SIZE = 11
+    const INTRO_RING_VERSAL_FONT_SIZE = 20
+    const renderRingSegments = (segments: RingSegment[]) =>
+      segments.map((seg, i) => (
+        <tspan
+          key={i}
+          fontSize={seg.versal ? INTRO_RING_VERSAL_FONT_SIZE : INTRO_RING_BASE_FONT_SIZE}
+          fontWeight={seg.bold ? 700 : 400}
+        >
+          {seg.text}
+        </tspan>
+      ))
     // Una vuelta completa cada 90s: lento a propósito, pensado para
     // leerse cómodo mientras gira, no para "esperar" a que termine.
     const INTRO_RING_ROTATION_SECONDS = 60
@@ -5140,9 +5177,9 @@ export default function AstrologyCalculator() {
                     dur={`${INTRO_RING_ROTATION_SECONDS}s`}
                     repeatCount="indefinite"
                   />
-                  <text style={{ fontFamily: "var(--font-gothic)" }} fontSize="11" letterSpacing="0.1" fill="white">
+                  <text style={{ fontFamily: "var(--font-gothic)" }} letterSpacing="0.1" fill="white">
                     <textPath href="#introRingPath" startOffset="0">
-                      {introRingText}
+                      {renderRingSegments(introRingSegments)}
                     </textPath>
                   </text>
                 </g>
@@ -5162,9 +5199,9 @@ export default function AstrologyCalculator() {
                     dur={`${INTRO_RING_ROTATION_SECONDS}s`}
                     repeatCount="indefinite"
                   />
-                  <text style={{ fontFamily: "var(--font-gothic)" }} fontSize="11" letterSpacing="0.1" fill="white">
+                  <text style={{ fontFamily: "var(--font-gothic)" }} letterSpacing="0.1" fill="white">
                     <textPath href="#introRingPath" startOffset="0">
-                      {introRingText}
+                      {renderRingSegments(introRingSegments)}
                     </textPath>
                   </text>
                 </g>
