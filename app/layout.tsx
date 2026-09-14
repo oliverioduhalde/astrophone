@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, UnifrakturMaguntia } from 'next/font/google'
+import { Geist, Geist_Mono, UnifrakturCook } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
@@ -8,7 +8,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 // [T-63] Instalación: tipografía gótica (blackletter) para el anillo de
 // texto inicial. Expuesta como variable CSS para usarla puntual, sin
 // pisar el font-mono del resto de la app.
-const _gothic = UnifrakturMaguntia({ subsets: ["latin"], weight: "400", variable: "--font-gothic" });
+const _gothic = UnifrakturCook({ subsets: ["latin"], weight: "700", variable: "--font-gothic" });
 
 export const metadata: Metadata = {
   title: 'ASTRO.LOG.IO',
