@@ -661,12 +661,12 @@ const LOADING_INTRO_PARAGRAPHS_BY_LANGUAGE: Record<Language, string[]> = {
   // Criterio: cada línea es una unidad de sentido propia
   // (sujeto / complemento / acción / destino).
   en: [
-    "ASTRO.LOG.IO\nis inspired by\nJohannes Kepler’s\nHarmony of the Spheres",
+    "Astro. Log. Io\nis inspired by\nJohannes Kepler’s\nHarmony of the Spheres",
     "This vision\nof celestial music\ntranslates accurate astral data\ninto music",
     "By introducing\nplace and time\nyou may listen and download\nsonic astrological charts",
   ],
   es: [
-    "ASTRO.LOG.IO\nestá inspirado en\nla Armonía de las Esferas\nde Johannes Kepler",
+    "Astro. Log. Io\nestá inspirado en\nla Armonía de las Esferas\nde Johannes Kepler",
     "Esta visión\nde la música celestial\ntraduce datos astrales precisos\nen música",
     "Introduciendo\nubicación y hora\npodrás escuchar y descargar\ncartas astrales sonoras",
   ],
@@ -5068,15 +5068,19 @@ export default function AstrologyCalculator() {
     //
     // [T-65] Versales góticas: la primera letra de cada oración/párrafo
     // se renderiza mucho más grande que el cuerpo (como en un manuscrito
-    // iluminado). Además, "ASTRO.LOG.IO" (el título, primer párrafo) va
-    // completo en bold — no solo su primera letra.
+    // iluminado). Además, "Astro. Log. Io" (el título, primer párrafo) va
+    // completo en bold — no solo su primera letra. Solo A/L/I van en
+    // mayúscula (no todo el título en caps).
     type RingSegment = { text: string; versal?: boolean; bold?: boolean }
     const RING_SEPARATOR = "      ·      "
+    const INTRO_TITLE = "Astro. Log. Io"
     const buildParagraphSegments = (text: string, isTitleParagraph: boolean): RingSegment[] => {
       if (isTitleParagraph) {
-        const match = text.match(/^(\S+)(\s.*)?$/s)
-        const title = match ? match[1] : text
-        const rest = match?.[2] ?? ""
+        // Título fijo conocido — no se parsea por espacio (el título
+        // mismo tiene espacios: "Astro. Log. Io").
+        const hasTitle = text.startsWith(INTRO_TITLE)
+        const title = hasTitle ? INTRO_TITLE : text
+        const rest = hasTitle ? text.slice(INTRO_TITLE.length) : ""
         const segments: RingSegment[] = [{ text: title.charAt(0), versal: true, bold: true }]
         if (title.length > 1) segments.push({ text: title.slice(1), bold: true })
         if (rest) segments.push({ text: rest })
