@@ -2,30 +2,38 @@
 
 import { useEffect, useRef } from "react"
 
-// [T-51] Instalación: capa de input para el controlador físico USB
-// "SIDE-KEYBOARD" (SDINNOVATION, VID 0x6d7b / PID 0xdcfa) — 3 botones + 1 dial
-// con push. El dispositivo emula un teclado HID estándar; este hook traduce
-// las teclas crudas que manda a eventos semánticos A/B/C/D + rotación de dial,
-// para que el resto de la app nunca tenga que conocer las teclas reales.
+// [T-76] Instalación: capa de input para el controlador físico USB
+// "SIDE-KEYBOARD" (SDINNOVATION, VID 0x6d7b / PID 0xdcfa, controller M951)
+// — 3 botones + 1 dial con push. El dispositivo emula un teclado HID
+// estándar; este hook traduce las teclas crudas que manda a eventos
+// semánticos A/B/C/D + rotación de dial, para que el resto de la app nunca
+// tenga que conocer las teclas reales.
 //
-// Mapeo confirmado por prueba física (2026-09-14):
-//   Botón A         -> "3"
-//   Botón B         -> ","
-//   Botón C         -> "."
-//   Push del dial   -> " " (space)  = D
-//   Dial ← (1 click) -> "1"
-//   Dial → (1 click) -> "2"
+// Mapeo reconfigurado desde el propio dispositivo (sdcx-tech.com,
+// Profile 1 / Main Layer, 2026-09-14) — YA NO es el mapeo original
+// confirmado por prueba física, el usuario lo cambió con el configurador:
+//   Botón A (izquierdo)        -> "ArrowLeft"
+//   Botón B (centro)           -> "ArrowRight"
+//   Botón C (derecho)          -> "Enter"
+//   Dial, giro antihorario     -> ","
+//   Dial, giro horario         -> "."
+//   Push del dial              -> "Enter"  (= D)
 //
-// Si en algún momento se reprograma el dispositivo o se cambia de hardware,
-// alcanza con tocar KEY_MAP acá — el resto de la app queda intacto.
+// OJO: el push del dial y el botón C mandan la MISMA tecla ("Enter") —
+// el propio configurador del dispositivo los mapeó igual, así que desde
+// software son indistinguibles. onD nunca se dispara solo: cualquier uso
+// del dial-push cae en onC. Si hace falta diferenciarlos, hay que
+// reconfigurar el dispositivo (asignarle al push una tecla propia).
+//
+// Si en algún momento se reprograma el dispositivo de nuevo, alcanza con
+// tocar KEY_MAP acá — el resto de la app queda intacto.
 
 const KEY_MAP = {
-  "3": "A",
-  ",": "B",
-  ".": "C",
-  " ": "D",
-  "1": "dialLeft",
-  "2": "dialRight",
+  ArrowLeft: "A",
+  ArrowRight: "B",
+  Enter: "C",
+  ",": "dialLeft",
+  ".": "dialRight",
 } as const
 
 type ControllerKey = keyof typeof KEY_MAP
@@ -65,8 +73,8 @@ export function useInstallationController(handlers: InstallationControllerHandle
       const action = KEY_MAP[event.key as ControllerKey] as ControllerAction | undefined
       if (!action) return
 
-      // Evita que "3", "," "." " " etc. hagan scroll de página, activen
-      // botones enfocados, o cualquier efecto por defecto del navegador.
+      // Evita que ArrowLeft/ArrowRight hagan scroll de página, Enter
+      // active un botón enfocado, etc.
       event.preventDefault()
 
       const h = handlersRef.current
@@ -78,9 +86,10 @@ export function useInstallationController(handlers: InstallationControllerHandle
           h.onB?.()
           break
         case "C":
+          // El push del dial manda la misma tecla que este botón (ver
+          // nota arriba) — no hay forma de distinguirlos, así que onD
+          // nunca se llama solo.
           h.onC?.()
-          break
-        case "D":
           h.onD?.()
           break
         case "dialLeft":
