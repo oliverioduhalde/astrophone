@@ -6191,54 +6191,6 @@ export default function AstrologyCalculator() {
             </div>
 
             {(selectedPreset === "manual" || selectedPreset === "here_now") && (
-              <div
-                className="mb-2 flex flex-wrap items-center gap-1 border border-white/25 bg-white/[0.03] p-1.5 md:mb-3 md:gap-1.5 md:p-2"
-                aria-label={language === "es" ? "Controlador físico: A/B navegan, dial cambia el valor" : "Physical controller: A/B navigate, dial changes the value"}
-              >
-                {CONTROLLER_TAB_ORDER.map((tab, index) => {
-                  const isActiveTab = index === ctrlTabIndex
-                  let chipValue = ""
-                  if (tab === "day") chipValue = String(ctrlDay).padStart(2, "0")
-                  else if (tab === "month") chipValue = String(ctrlMonth).padStart(2, "0")
-                  else if (tab === "year") chipValue = String(ctrlYear)
-                  else if (tab === "hour") chipValue = String(ctrlHour).padStart(2, "0")
-                  else if (tab === "minute") chipValue = String(ctrlMinute).padStart(2, "0")
-                  else if (tab === "location") {
-                    const typed = ctrlLocationChars.join("").replace(/\s+$/, "")
-                    const visibleLength = Math.max(typed.length, ctrlLocationCursor + 1)
-                    chipValue = ctrlLocationChars
-                      .slice(0, visibleLength)
-                      .map((c, i) => (i === ctrlLocationCursor ? `[${c}]` : c))
-                      .join("")
-                  } else if (tab === "confirm") chipValue = `▶ ${navModeHintLabel[TOP_PANEL_MODE_ORDER[ctrlConfirmModeIndex]]}`
-
-                  return (
-                    <div
-                      key={tab}
-                      className={`flex flex-col items-center border px-1.5 py-1 font-mono transition-colors md:px-2 md:py-1.5 ${
-                        isActiveTab
-                          ? "border-white bg-white/15 text-white"
-                          : "border-white/30 text-white/50"
-                      }`}
-                    >
-                      <span className="text-[7px] uppercase tracking-wide md:text-[9px]">
-                        {CONTROLLER_TAB_LABEL[language][tab]}
-                      </span>
-                      <span className="text-[10px] font-bold leading-tight md:text-[13px]">{chipValue}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {ctrlCurrentTab === "location" && locationSuggestions[0] && (selectedPreset === "manual" || selectedPreset === "here_now") && (
-              <div className="mb-2 -mt-1 font-mono text-[9px] text-lime-300/80 md:text-[12px]">
-                {language === "es" ? "C elige: " : "C selects: "}
-                <span className="font-bold">{locationSuggestions[0].display}</span>
-              </div>
-            )}
-
-            {(selectedPreset === "manual" || selectedPreset === "here_now") && (
               <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2 md:gap-3">
                 <div>
                   <label className="mb-0.5 block font-mono text-[10px] text-gray-300 md:mb-1 md:text-[18px]">
@@ -6336,6 +6288,10 @@ export default function AstrologyCalculator() {
                 const modeHoverKey = `subject-mode:${mode}`
                 const isHovered = topPanelHoverKey === modeHoverKey
                 const tooltipText = isHovered ? navModeInstructionByMode[mode] : null
+                // [T-75] Sin interfaz de control aparte — el modo elegido
+                // con el dial (tab "confirm") se resalta directo en estos
+                // mismos botones existentes.
+                const isControllerSelected = ctrlCurrentTab === "confirm" && TOP_PANEL_MODE_ORDER[ctrlConfirmModeIndex] === mode
 
                 return (
                   <div key={`subject-launch-${mode}`} className="relative">
@@ -6349,7 +6305,7 @@ export default function AstrologyCalculator() {
                       onMouseEnter={() => showTopPanelHint(modeHoverKey)}
                       onFocus={() => showTopPanelHint(modeHoverKey)}
                       className={`relative flex h-[38px] md:h-[42px] w-full items-center justify-center overflow-hidden border px-1 font-mono font-bold text-[9px] md:text-[12px] leading-none uppercase tracking-[0.1em] md:tracking-[0.12em] transition-colors ${
-                        isHovered
+                        isHovered || isControllerSelected
                           ? "border-white bg-white/20 text-white"
                           : "border-white/50 bg-transparent text-white/60 hover:bg-white/12"
                       }`}
