@@ -10,6 +10,7 @@ import {
   type OfflineMp3PlanetEvent,
   type RenderPhases,
 } from "@/lib/use-planet-audio"
+import { useInstallationController } from "@/lib/use-installation-controller"
 
 const PLANET_GLYPH_SVGS: Record<string, string> = {
   sun: "/planet-glyphs/sun.svg",
@@ -225,6 +226,36 @@ const NAV_MODE_ACTION_LABEL_BY_LANGUAGE: Record<Language, Record<NavigationMode,
 }
 const NAVIGATION_MODES: NavigationMode[] = ["astral_chord", "radial", "sequential"]
 const TOP_PANEL_MODE_ORDER: NavigationMode[] = ["radial", "sequential", "astral_chord"]
+
+// [T-52] Instalación: carga de datos con controlador físico (3 botones + dial)
+// A/B navegan entre tabs, C entra/confirma edición, dial cambia el valor.
+type ControllerTabId = "day" | "month" | "year" | "hour" | "minute" | "location" | "confirm"
+const CONTROLLER_TAB_ORDER: ControllerTabId[] = ["day", "month", "year", "hour", "minute", "location", "confirm"]
+const CONTROLLER_TAB_LABEL: Record<Language, Record<ControllerTabId, string>> = {
+  es: {
+    day: "DÍA",
+    month: "MES",
+    year: "AÑO",
+    hour: "HORA",
+    minute: "MIN",
+    location: "UBICACIÓN",
+    confirm: "CONFIRMAR",
+  },
+  en: {
+    day: "DAY",
+    month: "MONTH",
+    year: "YEAR",
+    hour: "HOUR",
+    minute: "MIN",
+    location: "LOCATION",
+    confirm: "CONFIRM",
+  },
+}
+// Ciclo de caracteres del dial para el tab de Ubicación: espacio, A-Z, y un
+// marcador de fin de palabra ("⏎ FIN") para cerrar la edición del campo.
+const CONTROLLER_LOCATION_CHAR_CYCLE = [" ", ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)), "⏎ FIN"]
+const CONTROLLER_LOCATION_END_MARKER = "⏎ FIN"
+const CONTROLLER_YEAR_MIN = 1900
 const TOP_PANEL_DOWNLOAD_TOOLTIP_TEXT = "DOWNLOAD"
 const TOP_PANEL_MENU_TOOLTIP_TEXT = "EXTENDED MENU"
 const EXPORT_MODE_SUFFIX: Record<NavigationMode, string> = {
@@ -1176,6 +1207,67 @@ export default function AstrologyCalculator() {
   const [interfaceTheme, setInterfaceTheme] = useState<InterfaceTheme>("neon_blue")
   const [language, setLanguage] = useState<Language>("es") // [T-50] instalación: español por defecto
   const [synthVolume, setSynthVolume] = useState(450)
+
+  // [T-52] Instalación: estado de carga de datos con el controlador físico
+  // (3 botones + dial). A/B navegan tabs, C entra/confirma edición, el dial
+  // cambia el valor del tab activo. Wiring real (useInstallationController)
+  // más abajo, después de declarar handleCalculate/launchModeFromSubject.
+  const [ctrlTabIndex, setCtrlTabIndex] = useState(0)
+  const [ctrlEditing, setCtrlEditing] = useState(false)
+  const [ctrlDay, setCtrlDay] = useState(() => new Date().getDate())
+  const [ctrlMonth, setCtrlMonth] = useState(() => new Date().getMonth() + 1)
+  const [ctrlYear, setCtrlYear] = useState(() => new Date().getFullYear())
+  const [ctrlHour, setCtrlHour] = useState(() => new Date().getHours())
+  const [ctrlMinute, setCtrlMinute] = useState(() => new Date().getMinutes())
+  const [ctrlLocationChars, setCtrlLocationChars] = useState<string[]>([])
+  const [ctrlLocationCursorChar, setCtrlLocationCursorChar] = useState(" ")
+  const ctrlCurrentTab = CONTROLLER_TAB_ORDER[ctrlTabIndex]
+
+  // Refs "fuente de verdad" para los handlers del controlador físico. Un
+  // giro rápido del dial puede disparar varios keydown antes de que React
+  // termine de re-renderizar — si los handlers leyeran directo el estado
+  // (closures), podrían operar sobre un valor viejo y perder pasos (ej.
+  // confirmar la letra anterior en vez de la recién girada). Los refs se
+  // actualizan de forma síncrona dentro de cada handler, así el siguiente
+  // evento —por más pegado que llegue— siempre lee el valor real más
+  // reciente. El useState en paralelo es solo para pintar la UI.
+  const ctrlTabIndexRef = useRef(ctrlTabIndex)
+  const ctrlEditingRef = useRef(ctrlEditing)
+  const ctrlLocationCharsRef = useRef(ctrlLocationChars)
+  const ctrlLocationCursorCharRef = useRef(ctrlLocationCursorChar)
+  const manualEntryEnsuredRef = useRef(false)
+
+  const setCtrlTabIndexSynced = (value: number) => {
+    ctrlTabIndexRef.current = value
+    setCtrlTabIndex(value)
+  }
+  const setCtrlEditingSynced = (value: boolean) => {
+    ctrlEditingRef.current = value
+    setCtrlEditing(value)
+  }
+  const setCtrlLocationCharsSynced = (value: string[]) => {
+    ctrlLocationCharsRef.current = value
+    setCtrlLocationChars(value)
+  }
+  const setCtrlLocationCursorCharSynced = (value: string) => {
+    ctrlLocationCursorCharRef.current = value
+    setCtrlLocationCursorChar(value)
+  }
+
+  // El día no puede superar los días del mes/año elegidos (ej. 31 de feb).
+  useEffect(() => {
+    const maxDay = new Date(ctrlYear, ctrlMonth, 0).getDate()
+    setCtrlDay((d) => Math.min(d, maxDay))
+  }, [ctrlMonth, ctrlYear])
+
+  // Sincroniza día/mes/año/hora/minuto -> formData.datetime en vivo, pero
+  // solo mientras el preset activo es "manual" (no pisa el flujo de
+  // HERE & NOW, que carga geolocalización real).
+  useEffect(() => {
+    if (selectedPreset !== "manual") return
+    const iso = `${ctrlYear}-${String(ctrlMonth).padStart(2, "0")}-${String(ctrlDay).padStart(2, "0")}T${String(ctrlHour).padStart(2, "0")}:${String(ctrlMinute).padStart(2, "0")}`
+    setFormData((prev) => (prev.datetime === iso ? prev : { ...prev, datetime: iso }))
+  }, [selectedPreset, ctrlDay, ctrlMonth, ctrlYear, ctrlHour, ctrlMinute])
 
   const [glyphAnimationManager] = useState(() => new GlyphAnimationManager())
   const [animatedPlanets, setAnimatedPlanets] = useState<Record<string, number>>({})
@@ -4369,6 +4461,153 @@ export default function AstrologyCalculator() {
     [applyHereAndNow, handleCalculate, isManualSubjectReady, selectedPreset],
   )
 
+  // [T-52] Instalación: wiring real del controlador físico (3 botones + dial)
+  // sobre la carga de datos. Ver lib/use-installation-controller.ts.
+  const ctrlAdjustNumericTab = useCallback(
+    (tab: ControllerTabId, direction: 1 | -1) => {
+      switch (tab) {
+        case "day":
+          setCtrlDay((d) => {
+            const max = new Date(ctrlYear, ctrlMonth, 0).getDate()
+            const next = d + direction
+            if (next < 1) return max
+            if (next > max) return 1
+            return next
+          })
+          break
+        case "month":
+          setCtrlMonth((m) => {
+            const next = m + direction
+            if (next < 1) return 12
+            if (next > 12) return 1
+            return next
+          })
+          break
+        case "year":
+          setCtrlYear((y) => {
+            const maxYear = new Date().getFullYear()
+            const next = y + direction
+            if (next < CONTROLLER_YEAR_MIN) return maxYear
+            if (next > maxYear) return CONTROLLER_YEAR_MIN
+            return next
+          })
+          break
+        case "hour":
+          setCtrlHour((h) => (h + direction + 24) % 24)
+          break
+        case "minute":
+          setCtrlMinute((m) => (m + direction + 60) % 60)
+          break
+      }
+    },
+    [ctrlMonth, ctrlYear],
+  )
+
+  const ctrlAdjustLocationChar = useCallback((direction: 1 | -1) => {
+    const idx = CONTROLLER_LOCATION_CHAR_CYCLE.indexOf(ctrlLocationCursorCharRef.current)
+    const len = CONTROLLER_LOCATION_CHAR_CYCLE.length
+    const nextIdx = ((idx === -1 ? 0 : idx) + direction + len) % len
+    setCtrlLocationCursorCharSynced(CONTROLLER_LOCATION_CHAR_CYCLE[nextIdx])
+  }, [])
+
+  const ensureManualEntryActive = useCallback(() => {
+    if (manualEntryEnsuredRef.current) return
+    manualEntryEnsuredRef.current = true
+    // Evita que el auto-apply de "aquí y ahora" (que dispara solo al
+    // mostrar la pantalla, una vez terminado el loading, y puede caer en
+    // su propio fallback a "manual" si la geolocalización falla) pise el
+    // modo manual recién iniciado por el controlador físico.
+    hasAutoAppliedHereNowRef.current = true
+    setSelectedPreset("manual")
+    setError("")
+    // No reusa setManualMode() (que deja formData completamente vacío):
+    // arma la fecha/hora ya mismo con los valores actuales de
+    // día/mes/año/hora/minuto del controlador, en vez de depender de que
+    // el effect de sincronización se vuelva a disparar más tarde — si el
+    // usuario solo navega tabs sin tocar todavía el dial numérico, ese
+    // effect no tiene ningún dependency que cambie y nunca se re-ejecuta,
+    // dejando datetime vacío indefinidamente.
+    const iso = `${ctrlYear}-${String(ctrlMonth).padStart(2, "0")}-${String(ctrlDay).padStart(2, "0")}T${String(ctrlHour).padStart(2, "0")}:${String(ctrlMinute).padStart(2, "0")}`
+    setFormData({ datetime: iso, location: "", latitude: "", longitude: "" })
+  }, [ctrlYear, ctrlMonth, ctrlDay, ctrlHour, ctrlMinute])
+
+  const handleControllerA = useCallback(() => {
+    ensureManualEntryActive()
+    if (ctrlEditingRef.current) return
+    setCtrlTabIndexSynced((ctrlTabIndexRef.current + 1) % CONTROLLER_TAB_ORDER.length)
+  }, [ensureManualEntryActive])
+
+  const handleControllerB = useCallback(() => {
+    ensureManualEntryActive()
+    if (ctrlEditingRef.current) return
+    setCtrlTabIndexSynced((ctrlTabIndexRef.current - 1 + CONTROLLER_TAB_ORDER.length) % CONTROLLER_TAB_ORDER.length)
+  }, [ensureManualEntryActive])
+
+  const handleControllerC = useCallback(() => {
+    ensureManualEntryActive()
+    const currentTab = CONTROLLER_TAB_ORDER[ctrlTabIndexRef.current]
+
+    if (currentTab === "confirm") {
+      void launchModeFromSubject("sequential")
+      return
+    }
+
+    if (currentTab === "location") {
+      if (!ctrlEditingRef.current) {
+        setCtrlLocationCharsSynced([])
+        setCtrlLocationCursorCharSynced(" ")
+        setCtrlEditingSynced(true)
+        return
+      }
+      if (ctrlLocationCursorCharRef.current === CONTROLLER_LOCATION_END_MARKER) {
+        const finalLocation = ctrlLocationCharsRef.current.join("").trim()
+        setCtrlEditingSynced(false)
+        if (finalLocation) void resolveLocationAndUpdateCoords(finalLocation)
+        setCtrlTabIndexSynced((ctrlTabIndexRef.current + 1) % CONTROLLER_TAB_ORDER.length)
+        return
+      }
+      const nextChars = [...ctrlLocationCharsRef.current, ctrlLocationCursorCharRef.current]
+      setCtrlLocationCharsSynced(nextChars)
+      setFormData((prev) => ({ ...prev, location: nextChars.join("") }))
+      setCtrlLocationCursorCharSynced(" ")
+      return
+    }
+
+    // Tabs numéricos: día/mes/año/hora/minuto
+    if (!ctrlEditingRef.current) {
+      setCtrlEditingSynced(true)
+      return
+    }
+    setCtrlEditingSynced(false)
+    setCtrlTabIndexSynced((ctrlTabIndexRef.current + 1) % CONTROLLER_TAB_ORDER.length)
+  }, [ensureManualEntryActive, launchModeFromSubject, resolveLocationAndUpdateCoords])
+
+  const handleControllerDialLeft = useCallback(() => {
+    if (!ctrlEditingRef.current) return
+    const currentTab = CONTROLLER_TAB_ORDER[ctrlTabIndexRef.current]
+    if (currentTab === "location") ctrlAdjustLocationChar(-1)
+    else ctrlAdjustNumericTab(currentTab, -1)
+  }, [ctrlAdjustLocationChar, ctrlAdjustNumericTab])
+
+  const handleControllerDialRight = useCallback(() => {
+    if (!ctrlEditingRef.current) return
+    const currentTab = CONTROLLER_TAB_ORDER[ctrlTabIndexRef.current]
+    if (currentTab === "location") ctrlAdjustLocationChar(1)
+    else ctrlAdjustNumericTab(currentTab, 1)
+  }, [ctrlAdjustLocationChar, ctrlAdjustNumericTab])
+
+  useInstallationController(
+    {
+      onA: handleControllerA,
+      onB: handleControllerB,
+      onC: handleControllerC,
+      onDialLeft: handleControllerDialLeft,
+      onDialRight: handleControllerDialRight,
+      // onD: sin función, según lo pedido.
+    },
+    showSubject,
+  )
+
   useEffect(() => {
     if (!horoscopeData || showSubject) return
     const pendingMode = pendingModeLaunchRef.current
@@ -5834,6 +6073,47 @@ export default function AstrologyCalculator() {
                 {ui.dateTimePlaceInput}
               </button>
             </div>
+
+            {(selectedPreset === "manual" || selectedPreset === "here_now") && (
+              <div
+                className="mb-2 flex flex-wrap items-center gap-1 border border-white/25 bg-white/[0.03] p-1.5 md:mb-3 md:gap-1.5 md:p-2"
+                aria-label={language === "es" ? "Controlador físico: A/B navegan, C edita, dial cambia valor" : "Physical controller: A/B navigate, C edits, dial changes value"}
+              >
+                {CONTROLLER_TAB_ORDER.map((tab, index) => {
+                  const isActiveTab = index === ctrlTabIndex
+                  const isEditingThisTab = isActiveTab && ctrlEditing
+                  let chipValue = ""
+                  if (tab === "day") chipValue = String(ctrlDay).padStart(2, "0")
+                  else if (tab === "month") chipValue = String(ctrlMonth).padStart(2, "0")
+                  else if (tab === "year") chipValue = String(ctrlYear)
+                  else if (tab === "hour") chipValue = String(ctrlHour).padStart(2, "0")
+                  else if (tab === "minute") chipValue = String(ctrlMinute).padStart(2, "0")
+                  else if (tab === "location") {
+                    chipValue = isEditingThisTab
+                      ? `${ctrlLocationChars.join("")}[${ctrlLocationCursorChar}]`
+                      : formData.location || "—"
+                  } else if (tab === "confirm") chipValue = "▶"
+
+                  return (
+                    <div
+                      key={tab}
+                      className={`flex flex-col items-center border px-1.5 py-1 font-mono transition-colors md:px-2 md:py-1.5 ${
+                        isEditingThisTab
+                          ? "border-lime-400 bg-lime-400/15 text-lime-300"
+                          : isActiveTab
+                            ? "border-white bg-white/15 text-white"
+                            : "border-white/30 text-white/50"
+                      }`}
+                    >
+                      <span className="text-[7px] uppercase tracking-wide md:text-[9px]">
+                        {CONTROLLER_TAB_LABEL[language][tab]}
+                      </span>
+                      <span className="text-[10px] font-bold leading-tight md:text-[13px]">{chipValue}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
 
             {(selectedPreset === "manual" || selectedPreset === "here_now") && (
               <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2 md:gap-3">
