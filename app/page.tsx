@@ -5047,12 +5047,20 @@ export default function AstrologyCalculator() {
   // Planet detection is handled inside the active navigation scheduler.
 
   if (showLoadingIntroScreen) {
-    // [T-55] Instalación: un solo anillo con todo el texto junto, girando
-    // muy lento en sentido horario — arriba del círculo el texto se mueve
-    // de izquierda a derecha, al ritmo en que se lee. Mismo r=180 que el
-    // zodiaco de la carta astrológica más abajo (ver el <svg
-    // ref={chartSvgRef}> y su <circle r="180">) — el círculo sigue siendo
-    // la constante visual de toda la instalación.
+    // [T-56] Instalación: solo el círculo, nada más — sin título, sin
+    // toggle de idioma, sin SKIP, sin barra/porcentaje de carga (esos
+    // siguen existiendo y gatillando por detrás, solo dejaron de
+    // dibujarse acá). Un solo anillo con todo el texto junto, tipografía
+    // grande para que quede casi cerrado (queda un hueco chico a
+    // propósito, no una costura invisible), girando muy lento en sentido
+    // antihorario. Mismo r=180 que el zodiaco de la carta astrológica más
+    // abajo (ver el <svg ref={chartSvgRef}> y su <circle r="180">) — el
+    // círculo sigue siendo la constante visual de toda la instalación.
+    //
+    // Brillo: un mask con gradiente vertical fijo en pantalla (no rota
+    // con el texto) — arriba brillante, abajo apagado — para que quede
+    // claro que el "punto de lectura" es siempre la parte de arriba del
+    // círculo, sea cual sea el fragmento de texto que esté pasando por ahí.
     const introRingText = loadingIntroParagraphs.map((p) => p.replace(/\n/g, "   ·   ")).join("   ·   ")
     // Una vuelta completa cada 90s: lento a propósito, pensado para
     // leerse cómodo mientras gira, no para "esperar" a que termine.
@@ -5060,7 +5068,7 @@ export default function AstrologyCalculator() {
 
     return (
       <main
-        className={`min-h-screen bg-black text-white flex items-start justify-center p-4 pt-8 md:pt-10 relative ${
+        className={`min-h-screen bg-black text-white flex items-center justify-center p-4 relative ${
           isThemeMotionActive ? "astro-phosphor-shell astro-phosphor-shell--active" : ""
         }`}
         style={phosphorShellStyleWithFocus}
@@ -5068,85 +5076,58 @@ export default function AstrologyCalculator() {
       >
         {themeMotionOverlays}
         <div className="relative z-10 w-full max-w-3xl astro-phosphor-content" style={contentToneStyle}>
-          <div className="mb-8">
-            <div className="relative w-full text-center pt-1">
-              <h1 className="font-mono text-xl md:text-4xl uppercase tracking-widest text-center">
-                ASTRO.LOG.IO
-              </h1>
-              <div className="absolute right-0 top-1/2 -translate-y-1/2">
-                {languageToggleInline}
-              </div>
-              <div className="mt-2 h-[3px] w-full bg-white/20">
-                <div
-                  className="h-full bg-white"
-                  style={{
-                    width: `${loadingDisplayProgress}%`,
-                    transition: "width 0.05s linear",
-                  }}
-                ></div>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center justify-end text-[8px] uppercase tracking-[0.25em] text-white/50">
-              <span>{Math.round(loadingDisplayProgress)}%</span>
-            </div>
+          <div
+            className="relative mx-auto w-full max-w-[324px] aspect-square md:w-[min(74vh,86vw)] md:h-[min(74vh,86vw)] md:max-w-none md:aspect-auto cursor-pointer"
+            onClick={skipLoadingIntro}
+            role="button"
+            tabIndex={0}
+            aria-label={language === "es" ? "Continuar" : "Continue"}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") skipLoadingIntro()
+            }}
+          >
+            <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full loading-intro-fade-in">
+              <defs>
+                {/* Mismo r=180 que el zodiaco de la carta astrológica.
+                    Path partido en dos semicírculos (patrón estándar para
+                    textPath sobre una circunferencia completa), empieza
+                    arriba (12h). */}
+                <path id="introRingPath" d="M 200 20 A 180 180 0 1 1 200 380 A 180 180 0 1 1 200 20" fill="none" />
 
-            {/* [T-53] Círculo con el texto completo de la obra — mismo
-                cx/cy/r y las mismas proporciones de tamaño (w-[min(74vh,86vw)])
-                que el círculo de la carta, para que "coincida" cuando el
-                usuario pasa de esta pantalla a la carta. */}
-            <div
-              className="mt-6 relative mx-auto w-full max-w-[324px] aspect-square md:w-[min(74vh,86vw)] md:h-[min(74vh,86vw)] md:max-w-none md:aspect-auto cursor-pointer"
-              onClick={skipLoadingIntro}
-              role="button"
-              tabIndex={0}
-              aria-label={language === "es" ? "Continuar" : "Continue"}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") skipLoadingIntro()
-              }}
-            >
-              <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full loading-intro-fade-in">
-                <defs>
-                  {/* Mismo r=180 que el zodiaco de la carta astrológica.
-                      Path partido en dos semicírculos (patrón estándar para
-                      textPath sobre una circunferencia completa), empieza
-                      arriba (12h). */}
-                  <path id="introRingPath" d="M 200 20 A 180 180 0 1 1 200 380 A 180 180 0 1 1 200 20" fill="none" />
-                </defs>
+                {/* Gradiente vertical fijo (arriba brillante, abajo apagado)
+                    aplicado como mask sobre el grupo que rota: al ser un
+                    mask, sus coordenadas quedan fijas en pantalla aunque
+                    el contenido que enmascara gire — el brillo no
+                    acompaña al texto, se queda siempre arriba. */}
+                <linearGradient id="introRingFade" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="white" stopOpacity="1" />
+                  <stop offset="45%" stopColor="white" stopOpacity="0.55" />
+                  <stop offset="100%" stopColor="white" stopOpacity="0.08" />
+                </linearGradient>
+                <mask id="introRingFadeMask" maskUnits="userSpaceOnUse" x="0" y="0" width="400" height="400">
+                  <rect x="0" y="0" width="400" height="400" fill="url(#introRingFade)" />
+                </mask>
+              </defs>
 
-                <circle cx="200" cy="200" r="180" fill="none" stroke="white" strokeOpacity="0.18" strokeWidth="1" />
+              <circle cx="200" cy="200" r="180" fill="none" stroke="white" strokeOpacity="0.12" strokeWidth="1" />
 
-                {/* Gira en sentido horario: arriba del círculo el texto se
-                    ve moverse de izquierda a derecha, como al leer. */}
-                <g>
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    from="0 200 200"
-                    to="360 200 200"
-                    dur={`${INTRO_RING_ROTATION_SECONDS}s`}
-                    repeatCount="indefinite"
-                  />
-                  <text className="font-mono uppercase" fontSize="5.4" letterSpacing="0.1" fill="rgba(255,255,255,0.78)">
-                    <textPath href="#introRingPath" startOffset="0">
-                      {introRingText}
-                    </textPath>
-                  </text>
-                </g>
-              </svg>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between px-1">
-              <span className="font-mono text-[10px] md:text-[12px] uppercase tracking-[0.2em] text-white/55 px-2 py-1">
-                {BUILD_MARK}
-              </span>
-              <button
-                type="button"
-                onClick={skipLoadingIntro}
-                className="play-idle-pulse font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-white/55 hover:text-white transition-colors px-2 py-1"
-              >
-                SKIP
-              </button>
-            </div>
+              {/* Gira en sentido antihorario. */}
+              <g mask="url(#introRingFadeMask)">
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="360 200 200"
+                  to="0 200 200"
+                  dur={`${INTRO_RING_ROTATION_SECONDS}s`}
+                  repeatCount="indefinite"
+                />
+                <text className="font-mono uppercase" fontSize="5.8" letterSpacing="0.1" fill="white">
+                  <textPath href="#introRingPath" startOffset="0">
+                    {introRingText}
+                  </textPath>
+                </text>
+              </g>
+            </svg>
           </div>
         </div>
       </main>
