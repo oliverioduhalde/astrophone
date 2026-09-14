@@ -5064,7 +5064,7 @@ export default function AstrologyCalculator() {
     const introRingText = loadingIntroParagraphs.map((p) => p.replace(/\n/g, "   ·   ")).join("   ·   ")
     // Una vuelta completa cada 90s: lento a propósito, pensado para
     // leerse cómodo mientras gira, no para "esperar" a que termine.
-    const INTRO_RING_ROTATION_SECONDS = 90
+    const INTRO_RING_ROTATION_SECONDS = 180
 
     return (
       <main
@@ -5121,7 +5121,7 @@ export default function AstrologyCalculator() {
                   dur={`${INTRO_RING_ROTATION_SECONDS}s`}
                   repeatCount="indefinite"
                 />
-                <text className="font-mono uppercase" fontSize="5.8" letterSpacing="0.1" fill="white">
+                <text className="font-mono uppercase" fontSize="6.96" letterSpacing="0.1" fill="white">
                   <textPath href="#introRingPath" startOffset="0">
                     {introRingText}
                   </textPath>
