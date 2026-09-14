@@ -5093,8 +5093,8 @@ export default function AstrologyCalculator() {
       if (i < loadingIntroParagraphs.length - 1) segs.push({ text: RING_SEPARATOR })
       return segs
     })
-    const INTRO_RING_BASE_FONT_SIZE = 13.4
-    const INTRO_RING_VERSAL_FONT_SIZE = 24.3
+    const INTRO_RING_BASE_FONT_SIZE = 16.1
+    const INTRO_RING_VERSAL_FONT_SIZE = 29.2
     const renderRingSegments = (segments: RingSegment[]) =>
       segments.map((seg, i) => (
         <tspan
@@ -5168,17 +5168,28 @@ export default function AstrologyCalculator() {
                 </filter>
               </defs>
 
+              {/* Rotación vía CSS (compositor) en vez de SMIL
+                  <animateTransform> — SMIL corre en el hilo principal y
+                  bajo carga (el filtro de blur recalculando cada frame,
+                  ahora sobre un círculo más grande) se nota a saltos. CSS
+                  transform/animation se puede acelerar por GPU: mismo
+                  ángulo/sentido (360°→0°), mucho más fluido. */}
+              <style>{`
+                @keyframes introRingSpin {
+                  from { transform: rotate(360deg); }
+                  to { transform: rotate(0deg); }
+                }
+              `}</style>
+
               {/* Capa borrosa, solo visible de la mitad para abajo. */}
               <g mask="url(#introRingMaskBlur)">
-                <g filter="url(#introRingBlurFilter)">
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    from="360 200 200"
-                    to="0 200 200"
-                    dur={`${INTRO_RING_ROTATION_SECONDS}s`}
-                    repeatCount="indefinite"
-                  />
+                <g
+                  filter="url(#introRingBlurFilter)"
+                  style={{
+                    transformOrigin: "200px 200px",
+                    animation: `introRingSpin ${INTRO_RING_ROTATION_SECONDS}s linear infinite`,
+                  }}
+                >
                   <text style={{ fontFamily: "var(--font-gothic)" }} letterSpacing="0.1" fill="white">
                     <textPath href="#introRingPath" startOffset="0">
                       {renderRingSegments(introRingSegments)}
@@ -5187,20 +5198,16 @@ export default function AstrologyCalculator() {
                 </g>
               </g>
 
-              {/* Capa nítida, arriba — el "punto de lectura" fijo. Gira en
-                  sentido antihorario, igual que la capa borrosa (mismos
-                  parámetros de animateTransform, arrancan juntas → quedan
-                  sincronizadas). */}
+              {/* Capa nítida, arriba — el "punto de lectura" fijo. Misma
+                  animación CSS que la capa borrosa (mismo nombre/duración,
+                  arrancan en el mismo commit → quedan sincronizadas). */}
               <g mask="url(#introRingMaskSharp)">
-                <g>
-                  <animateTransform
-                    attributeName="transform"
-                    type="rotate"
-                    from="360 200 200"
-                    to="0 200 200"
-                    dur={`${INTRO_RING_ROTATION_SECONDS}s`}
-                    repeatCount="indefinite"
-                  />
+                <g
+                  style={{
+                    transformOrigin: "200px 200px",
+                    animation: `introRingSpin ${INTRO_RING_ROTATION_SECONDS}s linear infinite`,
+                  }}
+                >
                   <text style={{ fontFamily: "var(--font-gothic)" }} letterSpacing="0.1" fill="white">
                     <textPath href="#introRingPath" startOffset="0">
                       {renderRingSegments(introRingSegments)}
