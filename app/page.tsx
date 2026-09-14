@@ -256,18 +256,13 @@ const CONTROLLER_TAB_LABEL: Record<Language, Record<ControllerTabId, string>> = 
 // marcador de fin de palabra ("⏎ FIN") para cerrar la edición del campo.
 const CONTROLLER_YEAR_MIN = 1900
 // [T-72] Instalación: sin tecla dedicada para "confirmar letra", tipear
-// Ubicación letra por letra queda ambiguo (¿qué avanza el cursor?). Se
-// reemplaza por una lista corta que el dial recorre directo — el usuario
-// no confirmó una resolución para el cursor de texto libre; si la quiere,
-// avisar y se implementa aparte.
-const CONTROLLER_LOCATION_PRESETS: { label: string; latitude: string; longitude: string }[] = [
-  { label: "Buenos Aires, Argentina", latitude: "-34.6037", longitude: "-58.3816" },
-  { label: "Ciudad de México, México", latitude: "19.4326", longitude: "-99.1332" },
-  { label: "Madrid, España", latitude: "40.4168", longitude: "-3.7038" },
-  { label: "Roma, Italia", latitude: "41.8919", longitude: "12.5113" },
-  { label: "Berlín, Alemania", latitude: "52.5200", longitude: "13.4050" },
-  { label: "Nueva York, Estados Unidos", latitude: "40.7128", longitude: "-74.0060" },
-]
+// [T-73] Ubicación letra por letra: el dial cambia la letra en la
+// posición actual del cursor, A/B mueven el cursor (como flechas
+// izq/der); al llegar a un extremo, A/B "se escapan" del campo hacia el
+// tab anterior/siguiente — mismo comportamiento que cualquier otro
+// campo. C selecciona la primera sugerencia de geocoding (si hay).
+const CONTROLLER_LOCATION_MAX_CHARS = 20
+const CONTROLLER_LOCATION_CHAR_CYCLE = [" ", ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))]
 const TOP_PANEL_DOWNLOAD_TOOLTIP_TEXT = "DOWNLOAD"
 const TOP_PANEL_MENU_TOOLTIP_TEXT = "EXTENDED MENU"
 const EXPORT_MODE_SUFFIX: Record<NavigationMode, string> = {
@@ -1231,7 +1226,15 @@ export default function AstrologyCalculator() {
   const [ctrlYear, setCtrlYear] = useState(() => new Date().getFullYear())
   const [ctrlHour, setCtrlHour] = useState(() => new Date().getHours())
   const [ctrlMinute, setCtrlMinute] = useState(() => new Date().getMinutes())
-  const [ctrlLocationPresetIndex, setCtrlLocationPresetIndex] = useState(0)
+  // Ubicación: buffer de caracteres de largo fijo + cursor. A/B mueven el
+  // cursor mientras se está en este tab; el dial cambia la letra bajo el
+  // cursor. formData.location se mantiene en vivo con el texto (trimmed),
+  // lo que también dispara el buscador de sugerencias que ya existe en
+  // la app (ver el useEffect de locationSuggestions más abajo).
+  const [ctrlLocationChars, setCtrlLocationChars] = useState<string[]>(() =>
+    Array(CONTROLLER_LOCATION_MAX_CHARS).fill(" "),
+  )
+  const [ctrlLocationCursor, setCtrlLocationCursor] = useState(0)
   // Tab "confirm": el dial elige entre Orbital/Carta/Acorde (mismo orden
   // que TOP_PANEL_MODE_ORDER), B lanza la que esté elegida.
   const [ctrlConfirmModeIndex, setCtrlConfirmModeIndex] = useState(0)
@@ -1245,7 +1248,8 @@ export default function AstrologyCalculator() {
   // siguiente evento —por más pegado que llegue— siempre lee el valor
   // real más reciente. El useState en paralelo es solo para pintar la UI.
   const ctrlTabIndexRef = useRef(ctrlTabIndex)
-  const ctrlLocationPresetIndexRef = useRef(ctrlLocationPresetIndex)
+  const ctrlLocationCharsRef = useRef(ctrlLocationChars)
+  const ctrlLocationCursorRef = useRef(ctrlLocationCursor)
   const ctrlConfirmModeIndexRef = useRef(ctrlConfirmModeIndex)
   const manualEntryEnsuredRef = useRef(false)
 
@@ -1253,11 +1257,14 @@ export default function AstrologyCalculator() {
     ctrlTabIndexRef.current = value
     setCtrlTabIndex(value)
   }
-  const setCtrlLocationPresetIndexSynced = (value: number) => {
-    ctrlLocationPresetIndexRef.current = value
-    setCtrlLocationPresetIndex(value)
-    const preset = CONTROLLER_LOCATION_PRESETS[value]
-    setFormData((prev) => ({ ...prev, location: preset.label, latitude: preset.latitude, longitude: preset.longitude }))
+  const setCtrlLocationCursorSynced = (value: number) => {
+    ctrlLocationCursorRef.current = value
+    setCtrlLocationCursor(value)
+  }
+  const setCtrlLocationCharsSynced = (value: string[]) => {
+    ctrlLocationCharsRef.current = value
+    setCtrlLocationChars(value)
+    setFormData((prev) => ({ ...prev, location: value.join("").trim() }))
   }
   const setCtrlConfirmModeIndexSynced = (value: number) => {
     ctrlConfirmModeIndexRef.current = value
@@ -4517,10 +4524,26 @@ export default function AstrologyCalculator() {
     [ctrlMonth, ctrlYear],
   )
 
-  const ctrlAdjustLocationPreset = useCallback((direction: 1 | -1) => {
-    const len = CONTROLLER_LOCATION_PRESETS.length
-    const next = (ctrlLocationPresetIndexRef.current + direction + len) % len
-    setCtrlLocationPresetIndexSynced(next)
+  // Cambia la letra bajo el cursor de Ubicación (dial).
+  const ctrlAdjustLocationChar = useCallback((direction: 1 | -1) => {
+    const chars = [...ctrlLocationCharsRef.current]
+    const cursor = ctrlLocationCursorRef.current
+    const current = chars[cursor] ?? " "
+    const idx = CONTROLLER_LOCATION_CHAR_CYCLE.indexOf(current)
+    const len = CONTROLLER_LOCATION_CHAR_CYCLE.length
+    chars[cursor] = CONTROLLER_LOCATION_CHAR_CYCLE[((idx === -1 ? 0 : idx) + direction + len) % len]
+    setCtrlLocationCharsSynced(chars)
+  }, [])
+
+  // Mueve el cursor de letra dentro de Ubicación (A/B). Si se pasa de un
+  // extremo, "escapa" del campo: devuelve true si hay que seguir con la
+  // navegación normal entre tabs (llegó al borde), false si el cursor
+  // simplemente se movió adentro del campo.
+  const ctrlMoveLocationCursor = useCallback((direction: 1 | -1): boolean => {
+    const next = ctrlLocationCursorRef.current + direction
+    if (next < 0 || next >= CONTROLLER_LOCATION_MAX_CHARS) return true
+    setCtrlLocationCursorSynced(next)
+    return false
   }, [])
 
   const ctrlAdjustConfirmMode = useCallback((direction: 1 | -1) => {
@@ -4546,48 +4569,69 @@ export default function AstrologyCalculator() {
     // effect no tiene ningún dependency que cambie y nunca se re-ejecuta,
     // dejando datetime vacío indefinidamente.
     const iso = `${ctrlYear}-${String(ctrlMonth).padStart(2, "0")}-${String(ctrlDay).padStart(2, "0")}T${String(ctrlHour).padStart(2, "0")}:${String(ctrlMinute).padStart(2, "0")}`
-    // La ubicación arranca en el preset 0 (así lo muestra el chip desde el
-    // primer render) — formData tiene que reflejar eso YA, sin esperar a
-    // que el usuario toque el dial de Ubicación.
-    const defaultLocation = CONTROLLER_LOCATION_PRESETS[0]
-    setFormData({ datetime: iso, location: defaultLocation.label, latitude: defaultLocation.latitude, longitude: defaultLocation.longitude })
+    setFormData({ datetime: iso, location: "", latitude: "", longitude: "" })
   }, [ctrlYear, ctrlMonth, ctrlDay, ctrlHour, ctrlMinute])
 
-  // A = instancia anterior (flecha ←). Siempre navega — no hay modo de
-  // edición que bloquee.
+  // A = instancia anterior (flecha ←). Dentro de Ubicación, primero mueve
+  // el cursor de letra hacia atrás; recién al llegar al principio del
+  // campo "escapa" hacia el tab anterior — mismo comportamiento en
+  // cualquier otro campo (letra ~ instancia, igual que día/mes/etc).
   const handleControllerA = useCallback(() => {
     ensureManualEntryActive()
+    const currentTab = CONTROLLER_TAB_ORDER[ctrlTabIndexRef.current]
+    if (currentTab === "location" && !ctrlMoveLocationCursor(-1)) return
     setCtrlTabIndexSynced((ctrlTabIndexRef.current - 1 + CONTROLLER_TAB_ORDER.length) % CONTROLLER_TAB_ORDER.length)
-  }, [ensureManualEntryActive])
+  }, [ensureManualEntryActive, ctrlMoveLocationCursor])
 
-  // B = instancia siguiente (flecha →) — excepto en "confirm", donde no
-  // hay instancia siguiente: ahí B lanza la secuencia elegida con el dial
-  // (Orbital/Carta/Acorde).
+  // B = instancia siguiente (flecha →) — dentro de Ubicación mueve el
+  // cursor hacia adelante hasta el final del campo; en "confirm" no hay
+  // instancia siguiente: lanza la secuencia elegida con el dial.
   const handleControllerB = useCallback(() => {
     ensureManualEntryActive()
     const currentTab = CONTROLLER_TAB_ORDER[ctrlTabIndexRef.current]
+    if (currentTab === "location" && !ctrlMoveLocationCursor(1)) return
     if (currentTab === "confirm") {
       void launchModeFromSubject(TOP_PANEL_MODE_ORDER[ctrlConfirmModeIndexRef.current])
       return
     }
     setCtrlTabIndexSynced((ctrlTabIndexRef.current + 1) % CONTROLLER_TAB_ORDER.length)
-  }, [ensureManualEntryActive, launchModeFromSubject])
+  }, [ensureManualEntryActive, ctrlMoveLocationCursor, launchModeFromSubject])
+
+  // C: sin función en general — excepto en Ubicación, donde elige la
+  // primera sugerencia de geocoding (si hay alguna cargada).
+  const handleControllerC = useCallback(() => {
+    const currentTab = CONTROLLER_TAB_ORDER[ctrlTabIndexRef.current]
+    if (currentTab !== "location") return
+    const best = locationSuggestions[0]
+    if (!best) return
+    setFormData((prev) => ({
+      ...prev,
+      location: best.display,
+      latitude: best.latitude.toFixed(4),
+      longitude: best.longitude.toFixed(4),
+    }))
+    setLocationSuggestions([])
+    // Refleja la sugerencia elegida en el buffer de letras, por si el
+    // usuario vuelve a entrar con A/B a revisar/editar.
+    const padded = best.display.toUpperCase().slice(0, CONTROLLER_LOCATION_MAX_CHARS).padEnd(CONTROLLER_LOCATION_MAX_CHARS, " ")
+    setCtrlLocationCharsSynced(padded.split(""))
+  }, [locationSuggestions])
 
   // Dial = cambia el valor de la instancia activa, siempre en vivo (no
   // hace falta tecla de "entrar a editar").
   const handleControllerDialLeft = useCallback(() => {
     const currentTab = CONTROLLER_TAB_ORDER[ctrlTabIndexRef.current]
-    if (currentTab === "location") ctrlAdjustLocationPreset(-1)
+    if (currentTab === "location") ctrlAdjustLocationChar(-1)
     else if (currentTab === "confirm") ctrlAdjustConfirmMode(-1)
     else ctrlAdjustNumericTab(currentTab, -1)
-  }, [ctrlAdjustLocationPreset, ctrlAdjustConfirmMode, ctrlAdjustNumericTab])
+  }, [ctrlAdjustLocationChar, ctrlAdjustConfirmMode, ctrlAdjustNumericTab])
 
   const handleControllerDialRight = useCallback(() => {
     const currentTab = CONTROLLER_TAB_ORDER[ctrlTabIndexRef.current]
-    if (currentTab === "location") ctrlAdjustLocationPreset(1)
+    if (currentTab === "location") ctrlAdjustLocationChar(1)
     else if (currentTab === "confirm") ctrlAdjustConfirmMode(1)
     else ctrlAdjustNumericTab(currentTab, 1)
-  }, [ctrlAdjustLocationPreset, ctrlAdjustConfirmMode, ctrlAdjustNumericTab])
+  }, [ctrlAdjustLocationChar, ctrlAdjustConfirmMode, ctrlAdjustNumericTab])
 
   // [T-53] Instalación: modo kiosco (fullscreen al primer gesto, cursor
   // oculto en reposo, sin menú contextual). Siempre activo.
@@ -4597,7 +4641,8 @@ export default function AstrologyCalculator() {
     {
       onA: handleControllerA,
       onB: handleControllerB,
-      // onC/onD: sin función — el nuevo mapeo solo usa A/B/dial.
+      onC: handleControllerC,
+      // onD: sin función.
       onDialLeft: handleControllerDialLeft,
       onDialRight: handleControllerDialRight,
     },
@@ -6151,8 +6196,14 @@ export default function AstrologyCalculator() {
                   else if (tab === "year") chipValue = String(ctrlYear)
                   else if (tab === "hour") chipValue = String(ctrlHour).padStart(2, "0")
                   else if (tab === "minute") chipValue = String(ctrlMinute).padStart(2, "0")
-                  else if (tab === "location") chipValue = CONTROLLER_LOCATION_PRESETS[ctrlLocationPresetIndex].label
-                  else if (tab === "confirm") chipValue = `▶ ${navModeHintLabel[TOP_PANEL_MODE_ORDER[ctrlConfirmModeIndex]]}`
+                  else if (tab === "location") {
+                    const typed = ctrlLocationChars.join("").replace(/\s+$/, "")
+                    const visibleLength = Math.max(typed.length, ctrlLocationCursor + 1)
+                    chipValue = ctrlLocationChars
+                      .slice(0, visibleLength)
+                      .map((c, i) => (i === ctrlLocationCursor ? `[${c}]` : c))
+                      .join("")
+                  } else if (tab === "confirm") chipValue = `▶ ${navModeHintLabel[TOP_PANEL_MODE_ORDER[ctrlConfirmModeIndex]]}`
 
                   return (
                     <div
@@ -6170,6 +6221,13 @@ export default function AstrologyCalculator() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+
+            {ctrlCurrentTab === "location" && locationSuggestions[0] && (selectedPreset === "manual" || selectedPreset === "here_now") && (
+              <div className="mb-2 -mt-1 font-mono text-[9px] text-lime-300/80 md:text-[12px]">
+                {language === "es" ? "C elige: " : "C selects: "}
+                <span className="font-bold">{locationSuggestions[0].display}</span>
               </div>
             )}
 
