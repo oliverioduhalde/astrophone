@@ -4538,11 +4538,18 @@ export default function AstrologyCalculator() {
   // Mueve el cursor de letra dentro de Ubicación (A/B). Si se pasa de un
   // extremo, "escapa" del campo: devuelve true si hay que seguir con la
   // navegación normal entre tabs (llegó al borde), false si el cursor
-  // simplemente se movió adentro del campo.
+  // simplemente se movió adentro del campo. Al retroceder (A), borra la
+  // letra de la nueva posición — como backspace, para corregir sin tener
+  // que girar el dial hasta "espacio" letra por letra.
   const ctrlMoveLocationCursor = useCallback((direction: 1 | -1): boolean => {
     const next = ctrlLocationCursorRef.current + direction
     if (next < 0 || next >= CONTROLLER_LOCATION_MAX_CHARS) return true
     setCtrlLocationCursorSynced(next)
+    if (direction === -1) {
+      const chars = [...ctrlLocationCharsRef.current]
+      chars[next] = " "
+      setCtrlLocationCharsSynced(chars)
+    }
     return false
   }, [])
 
