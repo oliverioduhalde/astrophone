@@ -661,14 +661,12 @@ const LOADING_INTRO_PARAGRAPHS_BY_LANGUAGE: Record<Language, string[]> = {
   // Criterio: cada línea es una unidad de sentido propia
   // (sujeto / complemento / acción / destino).
   en: [
-    "Astro. log. io\nis inspired by\nJohannes Kepler’s\nHarmony of the Spheres",
-    "This vision\nof celestial music\ntranslates accurate astral data\ninto music",
-    "By introducing\nplace and time\nyou may listen and download\nsonic astrological charts",
+    "Astro. log. io draws from Johannes Kepler’s Harmony of the Spheres, translating astral data into sound.",
+    "Enter date and place to hear your astrophonic score.",
   ],
   es: [
-    "Astro. log. io\nestá inspirado en\nla Armonía de las Esferas\nde Johannes Kepler",
-    "Esta visión\nde la música celestial\ntraduce datos astrales precisos\nen música",
-    "Introduciendo\nubicación y hora\npodrás escuchar y descargar\ncartas astrales sonoras",
+    "Astro. log. io se inspira en la Armonía de las Esferas de Johannes Kepler, traduciendo datos astrales en sonido.",
+    "Introduce fecha y lugar para escuchar tu partitura astrofónica.",
   ],
 }
 const INFO_PARAGRAPHS_BY_LANGUAGE: Record<Language, string[]> = {
