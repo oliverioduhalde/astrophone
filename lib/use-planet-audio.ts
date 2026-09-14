@@ -913,24 +913,29 @@ export function usePlanetAudio(
           console.log("[v0] Resonance Audio scene initialized with 18dB gain and limiter")
         }
 
+        // T-49: pistas recortadas a 60s (fade-out 10s) y servidas localmente
+        // desde /public — reemplaza los mp3 de 7min/9.6MB de blob storage
+        // que tardaban demasiado en descargar+decodificar (~135MB totales).
         const planetAudioMap = {
-          sun: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/01%20SUN%20ADN-J5pCD5YXQM03r4vktr2y5yUh3W7Jz4.mp3",
-          moon: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/02%20MOON%20ADN-r0bDnTr3lRhOnV5lNFRDGPDocVBiSd.mp3",
-          mercury: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/03%20MERCURY%20ADN-tEr5fQwvG8YwEAicwfsXbLOeRxW0id.mp3",
-          venus: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/04%20VENUS%20ADN-v47D1k0TcHtR49kwHs7MAjkqPQIiMr.mp3",
-          mars: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/05%20MARS%20ADN-oClVSlw80vrzmakuJsdtpUnWX4VTHg.mp3",
-          jupiter: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/06%20JUPITER%20ADN-DMMtzeboD1m7HeiXKhjT5u47Oo61Pr.mp3",
-          saturn: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/07%20SATURN%20ADN-f7b2UIOtjEzzFqVXefAShqNYROgBuy.mp3",
-          uranus: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/08%20URANUS%20ADN-Io0XOWbtZuFDRjWLnbDGZ6dKe3nkOm.mp3",
-          neptune: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/09%20NEPTUNE%20ADN-EwwPfIaUulNxd9IU3Gd31VCrWZFL1H.mp3",
-          pluto: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/10%20PLUTO%20ADN-OhFEfWgCc2b4F9eEtzAvTNh0No6129.mp3",
+          sun: "/audio/planets/sun.mp3",
+          moon: "/audio/planets/moon.mp3",
+          mercury: "/audio/planets/mercury.mp3",
+          venus: "/audio/planets/venus.mp3",
+          mars: "/audio/planets/mars.mp3",
+          jupiter: "/audio/planets/jupiter.mp3",
+          saturn: "/audio/planets/saturn.mp3",
+          uranus: "/audio/planets/uranus.mp3",
+          neptune: "/audio/planets/neptune.mp3",
+          pluto: "/audio/planets/pluto.mp3",
         }
 
+        // T-49: pistas recortadas a 4min (fade-out 10s) y servidas localmente
+        // desde /public — mismo criterio que planetAudioMap.
         const elementAudioMap = {
-          fire: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/01%20FIRE-8eUGRrVxNyhSJ1b36TFi2k8M85hiup.mp3",
-          earth: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/02%20EARTH-OcMQF04mhLvN00VAVJukOGlFOruvnP.mp3",
-          air: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/03%20AIR-CU33ZNjx6mwjmMXUkdxAvKlOGk4B1t.mp3",
-          water: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/04%20WATER-GNcvuoJGsQNHQkZ6Z8Ta7ww3Gtzb1P.mp3",
+          fire: "/audio/elements/fire.mp3",
+          earth: "/audio/elements/earth.mp3",
+          air: "/audio/elements/air.mp3",
+          water: "/audio/elements/water.mp3",
         }
 
         const tibetanSampleAudioMap = {
