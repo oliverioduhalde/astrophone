@@ -5140,7 +5140,7 @@ export default function AstrologyCalculator() {
                     dur={`${INTRO_RING_ROTATION_SECONDS}s`}
                     repeatCount="indefinite"
                   />
-                  <text style={{ fontFamily: "var(--font-gothic)" }} fontSize="9.5" letterSpacing="0.1" fill="white">
+                  <text style={{ fontFamily: "var(--font-gothic)" }} fontSize="11" letterSpacing="0.1" fill="white">
                     <textPath href="#introRingPath" startOffset="0">
                       {introRingText}
                     </textPath>
@@ -5162,7 +5162,7 @@ export default function AstrologyCalculator() {
                     dur={`${INTRO_RING_ROTATION_SECONDS}s`}
                     repeatCount="indefinite"
                   />
-                  <text style={{ fontFamily: "var(--font-gothic)" }} fontSize="9.5" letterSpacing="0.1" fill="white">
+                  <text style={{ fontFamily: "var(--font-gothic)" }} fontSize="11" letterSpacing="0.1" fill="white">
                     <textPath href="#introRingPath" startOffset="0">
                       {introRingText}
                     </textPath>
