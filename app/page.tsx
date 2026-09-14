@@ -1174,7 +1174,7 @@ export default function AstrologyCalculator() {
   const [modalEnabled, setModalEnabled] = useState(true)
   const [audioEngineMode, setAudioEngineMode] = useState<AudioEngineMode>("samples")
   const [interfaceTheme, setInterfaceTheme] = useState<InterfaceTheme>("neon_blue")
-  const [language, setLanguage] = useState<Language>("en")
+  const [language, setLanguage] = useState<Language>("es") // [T-50] instalación: español por defecto
   const [synthVolume, setSynthVolume] = useState(450)
 
   const [glyphAnimationManager] = useState(() => new GlyphAnimationManager())
@@ -1911,14 +1911,13 @@ export default function AstrologyCalculator() {
   }, [])
 
   useEffect(() => {
+    // [T-50] instalación: siempre arranca en español, sin importar el idioma
+    // del navegador/dispositivo — solo respeta un cambio manual guardado.
     if (typeof window === "undefined") return
     const savedLanguage = window.localStorage.getItem("astro.log.io.language")
     if (savedLanguage === "en" || savedLanguage === "es") {
       setLanguage(savedLanguage)
-      return
     }
-    const browserLanguage = window.navigator.language?.toLowerCase() || "en"
-    setLanguage(browserLanguage.startsWith("es") ? "es" : "en")
   }, [])
 
   useEffect(() => {
