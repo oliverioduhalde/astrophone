@@ -661,12 +661,12 @@ const LOADING_INTRO_PARAGRAPHS_BY_LANGUAGE: Record<Language, string[]> = {
   // Criterio: cada línea es una unidad de sentido propia
   // (sujeto / complemento / acción / destino).
   en: [
-    "Astro. Log. Io\nis inspired by\nJohannes Kepler’s\nHarmony of the Spheres",
+    "Astro. log. io\nis inspired by\nJohannes Kepler’s\nHarmony of the Spheres",
     "This vision\nof celestial music\ntranslates accurate astral data\ninto music",
     "By introducing\nplace and time\nyou may listen and download\nsonic astrological charts",
   ],
   es: [
-    "Astro. Log. Io\nestá inspirado en\nla Armonía de las Esferas\nde Johannes Kepler",
+    "Astro. log. io\nestá inspirado en\nla Armonía de las Esferas\nde Johannes Kepler",
     "Esta visión\nde la música celestial\ntraduce datos astrales precisos\nen música",
     "Introduciendo\nubicación y hora\npodrás escuchar y descargar\ncartas astrales sonoras",
   ],
@@ -5073,7 +5073,7 @@ export default function AstrologyCalculator() {
     // mayúscula (no todo el título en caps).
     type RingSegment = { text: string; versal?: boolean; bold?: boolean }
     const RING_SEPARATOR = "      ·      "
-    const INTRO_TITLE = "Astro. Log. Io"
+    const INTRO_TITLE = "Astro. log. io"
     const buildParagraphSegments = (text: string, isTitleParagraph: boolean): RingSegment[] => {
       if (isTitleParagraph) {
         // Título fijo conocido — no se parsea por espacio (el título
@@ -5095,8 +5095,8 @@ export default function AstrologyCalculator() {
       if (i < loadingIntroParagraphs.length - 1) segs.push({ text: RING_SEPARATOR })
       return segs
     })
-    const INTRO_RING_BASE_FONT_SIZE = 11
-    const INTRO_RING_VERSAL_FONT_SIZE = 20
+    const INTRO_RING_BASE_FONT_SIZE = 13.4
+    const INTRO_RING_VERSAL_FONT_SIZE = 24.3
     const renderRingSegments = (segments: RingSegment[]) =>
       segments.map((seg, i) => (
         <tspan
@@ -5122,7 +5122,7 @@ export default function AstrologyCalculator() {
         {themeMotionOverlays}
         <div className="relative z-10 w-full max-w-3xl astro-phosphor-content" style={contentToneStyle}>
           <div
-            className="relative mx-auto w-full max-w-[324px] aspect-square md:w-[min(74vh,86vw)] md:h-[min(74vh,86vw)] md:max-w-none md:aspect-auto cursor-pointer"
+            className="relative mx-auto w-full max-w-[324px] aspect-square md:w-[min(90vh,94vw)] md:h-[min(90vh,94vw)] md:max-w-none md:aspect-auto cursor-pointer"
             onClick={skipLoadingIntro}
             role="button"
             tabIndex={0}
