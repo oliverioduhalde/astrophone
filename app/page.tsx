@@ -5105,7 +5105,7 @@ export default function AstrologyCalculator() {
       ))
     // Una vuelta completa cada 90s: lento a propósito, pensado para
     // leerse cómodo mientras gira, no para "esperar" a que termine.
-    const INTRO_RING_ROTATION_SECONDS = 60
+    const INTRO_RING_ROTATION_SECONDS = 42
 
     return (
       <main
