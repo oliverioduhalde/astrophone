@@ -11,6 +11,7 @@ import {
   type RenderPhases,
 } from "@/lib/use-planet-audio"
 import { useInstallationController } from "@/lib/use-installation-controller"
+import { useKioskMode } from "@/lib/use-kiosk-mode"
 
 const PLANET_GLYPH_SVGS: Record<string, string> = {
   sun: "/planet-glyphs/sun.svg",
@@ -4596,6 +4597,10 @@ export default function AstrologyCalculator() {
     else ctrlAdjustNumericTab(currentTab, 1)
   }, [ctrlAdjustLocationChar, ctrlAdjustNumericTab])
 
+  // [T-53] Instalación: modo kiosco (fullscreen al primer gesto, cursor
+  // oculto en reposo, sin menú contextual). Siempre activo.
+  useKioskMode(true)
+
   useInstallationController(
     {
       onA: handleControllerA,
@@ -5042,8 +5047,13 @@ export default function AstrologyCalculator() {
   // Planet detection is handled inside the active navigation scheduler.
 
   if (showLoadingIntroScreen) {
-    const isFirstIntroParagraph = loadingIntroIndex <= 0
-    const isLastIntroParagraph = loadingIntroIndex >= loadingIntroParagraphs.length - 1
+    // [T-53] Instalación: el texto completo (sin paginar) puesto dentro de
+    // un círculo con la misma geometría que la carta astrológica
+    // (viewBox 400×400, cx=200 cy=200 r=180 — ver components/astro-chart.tsx
+    // y el <svg ref={chartSvgRef}> más abajo) para que sea el MISMO círculo
+    // que después se llena de planetas: el círculo es la constante visual
+    // de toda la instalación, solo cambia lo que contiene.
+    const fullIntroText = loadingIntroParagraphs.join("\n\n")
 
     return (
       <main
@@ -5055,7 +5065,7 @@ export default function AstrologyCalculator() {
       >
         {themeMotionOverlays}
         <div className="relative z-10 w-full max-w-3xl astro-phosphor-content" style={contentToneStyle}>
-          <div className="mb-8 min-h-[420px]">
+          <div className="mb-8">
             <div className="relative w-full text-center pt-1">
               <h1 className="font-mono text-xl md:text-4xl uppercase tracking-widest text-center">
                 ASTRO.LOG.IO
@@ -5077,87 +5087,47 @@ export default function AstrologyCalculator() {
               <span>{Math.round(loadingDisplayProgress)}%</span>
             </div>
 
-            {/* [T-32] Paragraph status dots (●○○) — pure indicator, not
-                nav. Sits above the paragraph and reflects which slide is
-                active. Navigation still happens via < / >. */}
+            {/* [T-53] Círculo con el texto completo de la obra — mismo
+                cx/cy/r y las mismas proporciones de tamaño (w-[min(74vh,86vw)])
+                que el círculo de la carta, para que "coincida" cuando el
+                usuario pasa de esta pantalla a la carta. */}
             <div
-              className="mt-5 flex items-center justify-center gap-2 md:gap-2.5"
-              aria-hidden="true"
+              className="mt-6 relative mx-auto w-full max-w-[324px] aspect-square md:w-[min(74vh,86vw)] md:h-[min(74vh,86vw)] md:max-w-none md:aspect-auto cursor-pointer"
+              onClick={skipLoadingIntro}
+              role="button"
+              tabIndex={0}
+              aria-label={language === "es" ? "Continuar" : "Continue"}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") skipLoadingIntro()
+              }}
             >
-              {loadingIntroParagraphs.map((_, index) => {
-                const isActive = index === loadingIntroIndex
-                return (
-                  <span
-                    key={`loading-status-dot-${index}`}
-                    className={`block h-2 w-2 md:h-2.5 md:w-2.5 rounded-full border border-white/80 transition-opacity duration-200 ${
-                      isActive ? "bg-white opacity-100" : "bg-white/15 opacity-45"
-                    }`}
-                  />
-                )
-              })}
-            </div>
-
-            <div className="mt-5 relative min-h-[500px] md:min-h-[560px] overflow-visible">
-              {/* [T-32] Single row: [<] [centered paragraph] [>].
-                  Text is centered both horizontally and within the
-                  flex space between the arrows. Arrows stay fixed at
-                  the edges so the layout doesn't shift between
-                  short and long paragraphs. */}
-              <div className="mx-auto max-w-[980px] px-2 pt-10 pb-8 flex items-center justify-between gap-3 md:gap-6">
-                <button
-                  onClick={retreatLoadingIntroParagraph}
-                  disabled={isFirstIntroParagraph}
-                  className={`shrink-0 font-mono text-[21px] md:text-[36px] leading-none transition-colors px-2 py-1 ${
-                    isFirstIntroParagraph
-                      ? "text-white/30 cursor-not-allowed"
-                      : "text-white/50 hover:text-white"
-                  }`}
-                  aria-label={language === "es" ? "Anterior" : "Previous"}
-                >
-                  {"<"}
-                </button>
+              <svg viewBox="0 0 400 400" className="absolute inset-0 h-full w-full" aria-hidden="true">
+                <circle cx="200" cy="200" r="180" fill="none" stroke="white" strokeOpacity="0.3" strokeWidth="1" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center p-[19%] md:p-[17%]">
                 <p
-                  key={`loading-current-${loadingIntroTick}-${loadingIntroIndex}`}
-                  onClick={advanceLoadingIntroParagraph}
-                  className="loading-intro-fade-in font-mono cursor-pointer flex-1 text-[10px] md:text-[26px] leading-[1.36] text-center"
+                  className="loading-intro-fade-in font-mono text-center leading-[1.5] text-[9px] md:text-[15px]"
                   style={{
-                    color: "rgba(255,255,255,0.7)",
+                    color: "rgba(255,255,255,0.75)",
                     whiteSpace: "pre-line",
                   }}
                 >
-                  {loadingIntroParagraphs[loadingIntroIndex] ?? ""}
+                  {fullIntroText}
                 </p>
-                <button
-                  // [T-32] On the last slide, the forward arrow acts
-                  // identically to SKIP — bypasses the audio-engine
-                  // gate and jumps straight to the form.
-                  onClick={isLastIntroParagraph ? skipLoadingIntro : advanceLoadingIntroParagraph}
-                  className="shrink-0 play-idle-pulse font-mono text-[21px] md:text-[36px] leading-none text-white/50 hover:text-white transition-colors px-2 py-1"
-                  aria-label={
-                    isLastIntroParagraph
-                      ? language === "es"
-                        ? "Continuar"
-                        : "Continue"
-                      : language === "es"
-                        ? "Siguiente"
-                        : "Next"
-                  }
-                >
-                  {">"}
-                </button>
               </div>
-              <div className="absolute inset-x-0 bottom-[190px] flex items-center justify-between px-1 md:bottom-3 md:px-0">
-                <span className="font-mono text-[10px] md:text-[12px] uppercase tracking-[0.2em] text-white/55 px-2 py-1">
-                  {BUILD_MARK}
-                </span>
-                <button
-                  type="button"
-                  onClick={skipLoadingIntro}
-                  className="font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-white/55 hover:text-white transition-colors px-2 py-1"
-                >
-                  SKIP
-                </button>
-              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between px-1">
+              <span className="font-mono text-[10px] md:text-[12px] uppercase tracking-[0.2em] text-white/55 px-2 py-1">
+                {BUILD_MARK}
+              </span>
+              <button
+                type="button"
+                onClick={skipLoadingIntro}
+                className="play-idle-pulse font-mono text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-white/55 hover:text-white transition-colors px-2 py-1"
+              >
+                SKIP
+              </button>
             </div>
           </div>
         </div>
